@@ -9,3 +9,12 @@ prisma/dev.db-journal
 public/uploads/*
 !public/uploads/.gitkeep
 next-env.d.ts
+.DS_Store
+*.tsbuildinfo
+Rental_App.code-workspace
+rental-mobile/node_modules/
+rental-mobile/.expo/
+rental-mobile/dist/
+rental-mobile/web-build/
+rental-mobile/expo-env.d.ts
+rental-mobile/.claude/
