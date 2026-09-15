@@ -1,0 +1,125 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         String
+  phone        String?
+  customerId   String?
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  customer       Customer?       @relation(fields: [customerId], references: [id])
+  timeEntries    TimeEntry[]
+  photos         Photo[]
+  assignedEvents ScheduleEvent[]
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  name      String
+  email     String?
+  phone     String?
+  address   String?
+  notes     String?
+  createdAt DateTime @default(now())
+
+  users   User[]
+  rentals Rental[]
+  events  ScheduleEvent[]
+}
+
+model Equipment {
+  id          String   @id @default(cuid())
+  number      String   @unique
+  name        String
+  type        String
+  status      String   @default("AVAILABLE")
+  rate        Float
+  billingUnit String   @default("DAILY")
+  notes       String?
+  createdAt   DateTime @default(now())
+
+  rentals Rental[]
+  photos  Photo[]
+  events  ScheduleEvent[]
+}
+
+model Rental {
+  id                  String    @id @default(cuid())
+  equipmentId         String
+  customerId          String
+  status              String    @default("SCHEDULED")
+  destination         String?
+  startAt             DateTime?
+  endAt               DateTime?
+  expectedPickupAt    DateTime?
+  rateSnapshot        Float
+  billingUnitSnapshot String
+  finalAmount         Float?
+  notes               String?
+  createdAt           DateTime  @default(now())
+
+  equipment Equipment       @relation(fields: [equipmentId], references: [id])
+  customer  Customer        @relation(fields: [customerId], references: [id])
+  photos    Photo[]
+  events    ScheduleEvent[]
+}
+
+model TimeEntry {
+  id         String    @id @default(cuid())
+  employeeId String
+  clockIn    DateTime
+  clockOut   DateTime?
+  notes      String?
+
+  employee User @relation(fields: [employeeId], references: [id])
+}
+
+model ScheduleEvent {
+  id          String    @id @default(cuid())
+  type        String
+  title       String?
+  startAt     DateTime
+  endAt       DateTime?
+  equipmentId String?
+  customerId  String?
+  employeeId  String?
+  rentalId    String?
+  notes       String?
+  destination String?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  equipment Equipment? @relation(fields: [equipmentId], references: [id])
+  customer  Customer?  @relation(fields: [customerId], references: [id])
+  employee  User?      @relation(fields: [employeeId], references: [id])
+  rental    Rental?    @relation(fields: [rentalId], references: [id])
+  photos    Photo[]
+}
+
+model Photo {
+  id           String   @id @default(cuid())
+  equipmentId  String
+  rentalId     String?
+  eventId      String?
+  uploadedById String?
+  type         String
+  path         String
+  takenAt      DateTime @default(now())
+  notes        String?
+
+  equipment  Equipment      @relation(fields: [equipmentId], references: [id])
+  rental     Rental?        @relation(fields: [rentalId], references: [id])
+  event      ScheduleEvent? @relation(fields: [eventId], references: [id])
+  uploadedBy User?          @relation(fields: [uploadedById], references: [id])
+}

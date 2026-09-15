@@ -1,0 +1,205 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { LiveCharge } from "@/components/LiveCharge";
+import { PageHeader } from "@/components/PageHeader";
+import { EquipmentConditionHistory } from "@/components/photos/EquipmentConditionHistory";
+import { StatusBadge } from "@/components/StatusBadge";
+import { formatDuration, formatRate } from "@/lib/billing";
+import { photoInclude } from "@/lib/photos";
+import { prisma } from "@/lib/prisma";
+import { formatDateTime } from "@/lib/utils";
+
+export default async function EquipmentDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const equipment = await prisma.equipment.findUnique({
+    where: { id },
+    include: {
+      rentals: {
+        include: {
+          customer: true,
+          photos: { include: photoInclude, orderBy: { takenAt: "asc" } },
+          events: { include: { employee: true }, orderBy: { startAt: "asc" } },
+        },
+        orderBy: { createdAt: "desc" },
+      },
+      photos: { include: photoInclude, orderBy: { takenAt: "desc" } },
+      events: {
+        include: { customer: true, employee: true },
+        orderBy: { startAt: "desc" },
+      },
+    },
+  });
+
+  if (!equipment) notFound();
+
+  const current = equipment.rentals.find((rental) => rental.status === "ACTIVE" || rental.status === "SCHEDULED");
+
+  return (
+    <div>
+      <PageHeader
+        title={`#${equipment.number} ${equipment.name}`}
+        subtitle={`${equipment.type} · ${formatRate(equipment.rate, equipment.billingUnit)}`}
+        action={{ href: `/admin/equipment/${equipment.id}/edit`, label: "Edit" }}
+      />
+      <div className="mb-6 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+        <section className="card p-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wide text-stone-500">Equipment information</p>
+              <p className="mt-1 text-sm text-stone-600">Type: {equipment.type}</p>
+              <p className="text-sm text-stone-600">Rate: {formatRate(equipment.rate, equipment.billingUnit)}</p>
+            </div>
+            <StatusBadge status={equipment.status} />
+          </div>
+          <p className="mt-4 text-sm text-stone-600">
+            {equipment.notes || "No description or maintenance notes yet."}
+          </p>
+          {current ? (
+            <p className="mt-3 text-sm text-stone-700">
+              Current customer: <span className="font-medium">{current.customer.name}</span>
+            </p>
+          ) : (
+            <p className="mt-3 text-sm text-stone-500">No current rental.</p>
+          )}
+        </section>
+        <section className="card p-5">
+          <p className="text-xs font-bold uppercase tracking-wide text-stone-500">History snapshot</p>
+          <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+            <div>
+              <p className="text-stone-500">Rentals</p>
+              <p className="text-2xl font-semibold">{equipment.rentals.length}</p>
+            </div>
+            <div>
+              <p className="text-stone-500">Photos</p>
+              <p className="text-2xl font-semibold">{equipment.photos.length}</p>
+            </div>
+            <div>
+              <p className="text-stone-500">Deliveries</p>
+              <p className="text-2xl font-semibold">{equipment.events.filter((event) => event.type === "DELIVERY").length}</p>
+            </div>
+            <div>
+              <p className="text-stone-500">Pickups</p>
+              <p className="text-2xl font-semibold">{equipment.events.filter((event) => event.type === "PICKUP").length}</p>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      {current ? (
+        <section className="card mb-6 p-5">
+          <h2 className="font-semibold">Current rental</h2>
+          <div className="mt-4 grid gap-6 md:grid-cols-2">
+            <div className="space-y-1 text-sm">
+              <p><span className="text-stone-500">Customer:</span> {current.customer.name}</p>
+              <p><span className="text-stone-500">Destination:</span> {current.destination || "—"}</p>
+              <p><span className="text-stone-500">Started:</span> {formatDateTime(current.startAt)}</p>
+              <p><span className="text-stone-500">Expected pickup:</span> {formatDateTime(current.expectedPickupAt)}</p>
+              <StatusBadge kind="rental" status={current.status} />
+              {current.status === "ACTIVE" ? (
+                <p className="pt-3">
+                  <Link className="btn btn-primary" href={`/employee/pickup?rentalId=${current.id}`}>
+                    Start pickup inspection
+                  </Link>
+                </p>
+              ) : null}
+            </div>
+            <LiveCharge
+              startAt={current.startAt}
+              endAt={current.endAt}
+              rate={current.rateSnapshot}
+              unit={current.billingUnitSnapshot}
+              status={current.status}
+              finalAmount={current.finalAmount}
+            />
+          </div>
+        </section>
+      ) : null}
+
+      <div className="mb-8">
+        <EquipmentConditionHistory
+          equipmentNumber={equipment.number}
+          equipmentName={equipment.name}
+          rentals={equipment.rentals}
+        />
+      </div>
+
+      <section className="mb-8">
+        <h2 className="mb-3 font-semibold">Rental billing history</h2>
+        <div className="space-y-4">
+          {equipment.rentals.length === 0 ? (
+            <div className="card px-6 py-10 text-center text-sm text-stone-500">
+              No rental history yet. Schedule a delivery to start a record.
+            </div>
+          ) : (
+            equipment.rentals.map((rental) => (
+              <article key={rental.id} className="card p-5">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold">{rental.customer.name}</p>
+                    <p className="text-sm text-stone-500">{rental.destination}</p>
+                  </div>
+                  <StatusBadge kind="rental" status={rental.status} />
+                </div>
+                <div className="mt-3 grid gap-2 text-sm text-stone-600 md:grid-cols-2">
+                  <p>Delivered: {formatDateTime(rental.startAt)}</p>
+                  <p>Picked up: {formatDateTime(rental.endAt)}</p>
+                  <p>Rate: {formatRate(rental.rateSnapshot, rental.billingUnitSnapshot)}</p>
+                  <p>
+                    Duration:{" "}
+                    {rental.startAt
+                      ? formatDuration(
+                          (rental.endAt ? new Date(rental.endAt).getTime() : Date.now()) -
+                            new Date(rental.startAt).getTime(),
+                        )
+                      : "—"}
+                  </p>
+                  {rental.notes ? <p className="md:col-span-2">Condition notes: {rental.notes}</p> : null}
+                  <LiveCharge
+                    compact
+                    startAt={rental.startAt}
+                    endAt={rental.endAt}
+                    rate={rental.rateSnapshot}
+                    unit={rental.billingUnitSnapshot}
+                    status={rental.status}
+                    finalAmount={rental.finalAmount}
+                  />
+                </div>
+              </article>
+            ))
+          )}
+        </div>
+      </section>
+
+      <section>
+        <h2 className="mb-3 font-semibold">Assignments & events</h2>
+        <div className="card divide-y divide-stone-100">
+          {equipment.events.length === 0 ? (
+            <p className="px-5 py-6 text-sm text-stone-500">No assignments yet.</p>
+          ) : (
+            equipment.events.map((event) => (
+              <div key={event.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 text-sm">
+                <div>
+                  <p className="font-medium">{event.title || event.type}</p>
+                  <p className="text-stone-500">
+                    {formatDateTime(event.startAt)}
+                    {event.customer ? ` · ${event.customer.name}` : ""}
+                    {event.employee ? ` · ${event.employee.name}` : ""}
+                  </p>
+                  {event.notes ? <p className="text-stone-500">Condition: {event.notes}</p> : null}
+                </div>
+                <span className={event.completedAt ? "text-emerald-700" : "text-amber-700"}>
+                  {event.completedAt ? "Done" : "Open"}
+                </span>
+              </div>
+            ))
+          )}
+        </div>
+        <div className="mt-4">
+          <Link className="btn btn-primary" href={`/admin/schedule/new?equipmentId=${equipment.id}`}>
+            Schedule delivery or pickup
+          </Link>
+        </div>
+      </section>
+    </div>
+  );
+}
