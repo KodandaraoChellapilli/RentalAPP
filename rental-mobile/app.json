@@ -1,0 +1,51 @@
+{
+  "expo": {
+    "name": "Ridgeline Rentals",
+    "slug": "ridgeline-rentals",
+    "scheme": "ridgeline",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#14110e"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Ridgeline Rentals uses the camera to photograph equipment before delivery and after pickup.",
+        "NSPhotoLibraryUsageDescription": "Ridgeline Rentals uses your photo library so you can attach equipment condition photos."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#14110E",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "permissions": ["CAMERA", "READ_MEDIA_IMAGES"],
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Ridgeline Rentals uses photos to record equipment condition.",
+          "cameraPermission": "Ridgeline Rentals uses the camera to photograph equipment before delivery and after pickup."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

@@ -12,6 +12,8 @@ Employee work hours are tracked separately from rental duration. Delivering a ma
 
 This repository folder (`Rental_App`, also referred to as `rental_app`) **is the product**. It is not a real-estate application.
 
+The Expo phone app lives in `rental-mobile/` inside this same repository. It consumes the JSON APIs under `/api` and does not redefine billing or status rules.
+
 ---
 
 ## Project overview
