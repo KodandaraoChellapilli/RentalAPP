@@ -1,58 +1,27 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import bcrypt from "bcryptjs";
-import { prisma } from "@/lib/prisma";
 import { clearSession, getSession, setSession } from "@/lib/session";
-import { homeFor, isRole } from "@/lib/constants";
+import { homeFor } from "@/lib/constants";
 import { safeNextPath } from "@/lib/safe-next";
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+import { ServiceError } from "@/lib/services/errors";
+import { loginService } from "@/lib/services/auth";
 
 export async function loginAction(formData: FormData) {
-  const email = String(formData.get("email") || "")
-    .trim()
-    .toLowerCase();
+  const email = String(formData.get("email") || "");
   const password = String(formData.get("password") || "");
   const next = String(formData.get("next") || "");
 
-  function fail(message: string): never {
-    redirect(`/login?${new URLSearchParams({ error: message, ...(next ? { next } : {}) }).toString()}`);
+  try {
+    const { user } = await loginService(email, password);
+    await setSession(user);
+    redirect(safeNextPath(next, user.role) || homeFor(user.role));
+  } catch (error) {
+    if (error instanceof ServiceError) {
+      redirect(`/login?${new URLSearchParams({ error: error.message, ...(next ? { next } : {}) }).toString()}`);
+    }
+    throw error;
   }
-
-  if (!email || !password) {
-    fail("Email and password are required.");
-  }
-  if (!EMAIL_RE.test(email)) {
-    fail("Enter a valid email address.");
-  }
-
-  const user = await prisma.user.findUnique({ where: { email } });
-  if (!user || !user.active) {
-    fail("Invalid email or password.");
-    return;
-  }
-
-  const ok = await bcrypt.compare(password, user.passwordHash);
-  if (!ok) {
-    fail("Invalid email or password.");
-    return;
-  }
-
-  if (!isRole(user.role)) {
-    fail("This account cannot sign in.");
-    return;
-  }
-
-  await setSession({
-    id: user.id,
-    email: user.email,
-    name: user.name,
-    role: user.role,
-    customerId: user.customerId,
-  });
-
-  redirect(safeNextPath(next, user.role) || homeFor(user.role));
 }
 
 export async function logoutAction() {
@@ -63,7 +32,6 @@ export async function logoutAction() {
 export async function changePasswordAction(formData: FormData) {
   const user = await getSession();
   if (!user) redirect("/login?reason=expired");
-  if (!user) return;
 
   const currentPassword = String(formData.get("currentPassword") || "");
   const newPassword = String(formData.get("newPassword") || "");
@@ -77,6 +45,8 @@ export async function changePasswordAction(formData: FormData) {
   if (newPassword.length < 8) fail("New password must be at least 8 characters.");
   if (newPassword !== confirmPassword) fail("Passwords do not match.");
 
+  const { prisma } = await import("@/lib/prisma");
+  const bcrypt = (await import("bcryptjs")).default;
   const record = await prisma.user.findUnique({ where: { id: user.id } });
   if (!record) fail("Account was not found.");
 

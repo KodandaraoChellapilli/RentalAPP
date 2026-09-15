@@ -471,6 +471,7 @@ Rental_App/
     customer/              Customer rentals portal
     account/               Settings
     login/                 Sign in
+    api/                   JSON APIs for the Expo phone app (Bearer token or website cookie)
   src/components/
     layout/                Sidebar, header, mobile nav
     photos/                Upload, gallery, before/after, equipment history
@@ -479,7 +480,9 @@ Rental_App/
     dashboard/             Owner dashboard view
     ui/                    Panel, buttons, empty states, confirm dialog
   src/lib/
-    actions/               Server actions (auth, rentals, equipment, people, timeclock)
+    actions/               Server actions (auth, rentals, equipment, people, timeclock) wrapping shared services
+    services/              Shared delivery, pickup, clock, and login logic used by the website and JSON APIs
+    api/                   JSON helpers, serializers, and role checks for `/api/*`
     billing.ts             Charge math
     photos.ts              Photo storage
     queries/               Dashboard data
@@ -509,6 +512,51 @@ Open [http://localhost:3000](http://localhost:3000). If port 3000 is already in 
 ```bash
 npm run dev -- -p 3001
 ```
+
+For a phone on the same Wi-Fi, bind all interfaces:
+
+```bash
+npm run dev:lan
+```
+
+Then use your computer’s LAN address in the mobile app, for example `http://192.168.1.20:3001`.
+
+---
+
+## Mobile app (iPhone / Android)
+
+The website is unchanged for computers. `rental-mobile` (sibling folder) is a React Native + Expo app that calls the same backend.
+
+It does **not** calculate rental charges or decide equipment status. The phone sends clock punches and delivery/pickup photos; `src/lib/services/` and `src/lib/billing.ts` apply the existing rules.
+
+### JSON APIs
+
+Auth uses the same signed session token as the website. The phone stores it and sends `Authorization: Bearer <token>`. Website cookies still work for `/api` too.
+
+| Method | Path | Who |
+| --- | --- | --- |
+| POST | `/api/auth/login` | Public |
+| GET | `/api/auth/me` | Signed in |
+| GET/POST | `/api/me/clock`, `/api/me/clock/in`, `/api/me/clock/out` | Employee / owner |
+| GET | `/api/me/jobs` | Employee / owner |
+| GET/POST | `/api/deliveries/:id`, `/api/deliveries/:id/complete` | Employee / owner |
+| GET/POST | `/api/pickups/:id`, `/api/pickups/:id/complete` | Employee / owner |
+| GET | `/api/dashboard`, `/api/rentals`, `/api/reports`, `/api/schedule`, `/api/customers`, `/api/employees` | Owner |
+| GET | `/api/equipment`, `/api/equipment/:id` | Staff |
+| GET | `/api/my/rentals`, `/api/my/rentals/:id` | Customer (own records only) |
+
+Delivery and pickup complete still require at least one photo, condition notes, confirmation, and they still block Available after reported damage.
+
+### Run the phone app
+
+```bash
+cd ../rental-mobile
+npm start
+```
+
+Open in Expo Go, iOS Simulator, or Android emulator. Sign in with the same demo accounts. On a physical phone, set **API server** on the login screen to `http://<your-computer-lan-ip>:3001`.
+
+See `rental-mobile/README.md` for camera permissions and troubleshooting.
 
 ---
 
@@ -603,7 +651,8 @@ These folders may sit next to `Rental_App` in the workspace. They are **not** th
 
 | Folder | Role |
 | --- | --- |
-| **`Rental_App` / `rental_app`** | The actual Ridgeline Rentals application. All equipment-rental features live here. |
+| **`Rental_App` / `rental_app`** | The actual Ridgeline Rentals website and JSON APIs. All equipment-rental rules live here. |
+| **`rental-mobile`** | Expo / React Native iPhone and Android app. Calls `/api` only; does not contain billing or damage-status logic. |
 | **`admin-ui`** | Primary **UI/UX and component-pattern** reference (sidebar, dashboard cards, tables, filters). No rental business logic was taken from it. |
 | **`real-estate-prod`** | Secondary **code-architecture** reference only (folder layout, splitting sidebar/header). It is **not** part of Ridgeline Rentals. Do not copy real-estate listings, properties, or agents into this app. |
 

@@ -29,7 +29,7 @@ export async function savePhotos(opts: {
   const saved = [];
   for (const file of opts.files) {
     if (!file || file.size === 0) continue;
-    if (!file.type.startsWith("image/")) continue;
+    if (file.type && !file.type.startsWith("image/")) continue;
     const ext = sanitizeExt(file.name, file.type);
     const filename = `${opts.type.toLowerCase()}-${opts.equipmentId}-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
     const buffer = Buffer.from(await file.arrayBuffer());
