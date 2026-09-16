@@ -4,8 +4,9 @@ import { useFocusEffect } from "expo-router";
 import { Button, Card, Empty, ErrorText, Loading, Screen, Stat, Title } from "../../src/components/ui";
 import { Sheet } from "../../src/components/Sheet";
 import { ApiError, api } from "../../src/lib/api";
+import { useAuth } from "../../src/lib/auth";
 import { friendlyError } from "../../src/lib/errors";
-import { formatWhen } from "../../src/lib/format";
+import { formatWhen, welcomeTitle } from "../../src/lib/format";
 import { successFeedback, tapFeedback, warnFeedback } from "../../src/lib/haptics";
 import { colors, radius, space } from "../../src/theme";
 import type { TimeEntry } from "../../src/types";
@@ -19,6 +20,7 @@ type ClockState = {
 };
 
 export default function ClockScreen() {
+  const { user } = useAuth();
   const [data, setData] = useState<ClockState | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -104,7 +106,8 @@ export default function ClockScreen() {
       }
     >
       <Title
-        title="Time clock"
+        kicker="Your shift"
+        title={welcomeTitle(user?.name, "Time clock")}
         subtitle="Employee work hours only. This does not change rental duration, deliveries, or pickups."
       />
       <ErrorText message={error} />

@@ -1,12 +1,11 @@
 import { useCallback, useState } from "react";
-import { Text } from "react-native";
 import { useFocusEffect, useRouter, type Href } from "expo-router";
-import { Empty, ErrorText, Loading, Screen, Title } from "../../../src/components/ui";
+import { Empty, ErrorText, Loading, Screen, SectionTitle, Title } from "../../../src/components/ui";
 import { RentalCard } from "../../../src/components/RentalCard";
 import { api } from "../../../src/lib/api";
 import { friendlyError } from "../../../src/lib/errors";
 import { useAuth } from "../../../src/lib/auth";
-import { colors } from "../../../src/theme";
+import { welcomeTitle } from "../../../src/lib/format";
 import type { Rental } from "../../../src/types";
 
 export default function CustomerRentals() {
@@ -42,17 +41,13 @@ export default function CustomerRentals() {
   return (
     <Screen onRefresh={load} refreshing={refreshing}>
       <Title
-        title="My equipment"
+        kicker="Your company"
+        title={welcomeTitle(user?.name, "My equipment")}
         subtitle="Only your company’s rentals are shown here. Other customers never appear in this list."
       />
-      {user?.name ? (
-        <Text style={{ color: colors.muted, marginBottom: 12, marginTop: -8 }}>
-          Signed in as {user.name}
-        </Text>
-      ) : null}
       <ErrorText message={error} />
 
-      <Title title="On rent / scheduled" subtitle="Amounts stay estimated until pickup is completed." />
+      <SectionTitle title="On rent / scheduled" subtitle="Amounts stay estimated until pickup is completed." />
       {active.length === 0 ? (
         <Empty title="Nothing out right now" body="When equipment is delivered to your jobsite, it will appear here." />
       ) : (
@@ -66,7 +61,7 @@ export default function CustomerRentals() {
         ))
       )}
 
-      <Title title="History" subtitle="Final amounts and return photos show after pickup." />
+      <SectionTitle title="History" subtitle="Final amounts and return photos show after pickup." />
       {history.length === 0 ? (
         <Empty title="No completed rentals yet" body="Finished jobs list here with final charges." />
       ) : (

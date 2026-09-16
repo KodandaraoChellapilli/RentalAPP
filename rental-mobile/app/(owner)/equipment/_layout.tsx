@@ -9,7 +9,7 @@ export default function EquipmentLayout() {
         headerTintColor: colors.white,
         headerTitleStyle: { fontWeight: "700" },
         headerBackTitle: "Fleet",
-        contentStyle: { backgroundColor: colors.bg },
+        contentStyle: { backgroundColor: colors.bg, flex: 1 },
       }}
     >
       <Stack.Screen name="index" options={{ title: "Equipment" }} />

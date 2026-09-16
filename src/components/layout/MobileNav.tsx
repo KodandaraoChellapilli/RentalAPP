@@ -49,7 +49,7 @@ export function MobileDrawer({
 export function MobileBottomNav({ role, pathname }: { role: Role; pathname: string }) {
   const links = navLinksFor(role);
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-20 flex gap-1 overflow-x-auto border-t border-stone-200 bg-white px-1 lg:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-20 flex gap-1 overflow-x-auto border-t border-stone-200 bg-white/95 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
       {links.map((link) => (
         <BottomLink key={link.href} link={link} pathname={pathname} />
       ))}

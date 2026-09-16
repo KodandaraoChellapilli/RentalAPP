@@ -1,3 +1,6 @@
+import { Platform, StyleSheet, type ViewStyle } from "react-native";
+
+/** Ridgeline Rentals design tokens — aligned with admin-ui / website palette. */
 export const colors = {
   ink: "#14110e",
   bg: "#f3eee6",
@@ -35,10 +38,26 @@ export const radius = {
 
 export const type = {
   kicker: 11,
+  caption: 12,
   body: 15,
-  title: 28,
-  display: 36,
+  subtitle: 14,
+  title: 26,
+  display: 34,
 };
+
+export const shadow = Platform.select({
+  ios: {
+    card: {
+      shadowColor: "#1c1917",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.06,
+      shadowRadius: 8,
+    } satisfies ViewStyle,
+  },
+  default: {
+    card: { elevation: 2 } satisfies ViewStyle,
+  },
+})!;
 
 export function statusColor(status: string) {
   if (status === "AVAILABLE" || status === "COMPLETED") return colors.success;
@@ -64,3 +83,30 @@ export function statusLabel(status: string) {
   };
   return labels[status] || status.replaceAll("_", " ");
 }
+
+export function stripeForEquipmentStatus(status: string) {
+  if (status === "AVAILABLE") return colors.success;
+  if (status === "ON_RENT") return colors.accent;
+  if (status === "MAINTENANCE") return colors.warning;
+  if (status === "OUT_OF_SERVICE") return colors.danger;
+  return colors.muted;
+}
+
+/** Shared card chrome used by EquipmentCard, JobCard, RentalCard. */
+export const cardStyles = StyleSheet.create({
+  stripeCard: {
+    flexDirection: "row",
+    backgroundColor: colors.surface,
+    borderColor: colors.line,
+    borderWidth: 1,
+    borderRadius: radius.lg,
+    overflow: "hidden",
+    marginBottom: 12,
+    ...shadow.card,
+  },
+  stripe: { width: 5 },
+  stripeBody: { flex: 1, padding: space.md },
+  cardTitle: { fontWeight: "700", fontSize: 17, marginTop: 8, color: colors.ink },
+  cardMeta: { color: colors.muted, marginTop: 3, fontSize: type.subtitle, lineHeight: 20 },
+  cardCta: { marginTop: 10, color: colors.accent, fontWeight: "700", fontSize: type.subtitle },
+});

@@ -11,7 +11,14 @@ export function FilterChips({
   onChange: (value: string) => void;
 }) {
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
+    <ScrollView
+      horizontal
+      nestedScrollEnabled
+      directionalLockEnabled
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.row}
+      style={styles.wrap}
+    >
       {options.map((option) => {
         const selected = option.value === value;
         return (
@@ -32,7 +39,8 @@ export function FilterChips({
 }
 
 const styles = StyleSheet.create({
-  row: { gap: 8, paddingBottom: 12 },
+  wrap: { flexGrow: 0, marginBottom: 4 },
+  row: { gap: 8, paddingBottom: 8, paddingRight: 8 },
   chip: {
     borderRadius: radius.pill,
     borderWidth: 1,

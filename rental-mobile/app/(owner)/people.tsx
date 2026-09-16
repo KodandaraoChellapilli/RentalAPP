@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { Text, View, StyleSheet } from "react-native";
 import { useFocusEffect } from "expo-router";
-import { Card, Empty, ErrorText, Loading, Screen, Title } from "../../src/components/ui";
+import { Card, Empty, ErrorText, Loading, Screen, SectionTitle, Title } from "../../src/components/ui";
 import { api } from "../../src/lib/api";
 import { friendlyError } from "../../src/lib/errors";
 import { colors, radius } from "../../src/theme";
@@ -63,7 +63,7 @@ export default function PeopleScreen() {
       />
       <ErrorText message={error} />
 
-      <Title title="Employees" />
+      <SectionTitle title="Employees" />
       {employees.length === 0 ? (
         <Empty title="No employees" body="Add crew on the website." />
       ) : (
@@ -87,7 +87,7 @@ export default function PeopleScreen() {
         ))
       )}
 
-      <Title title="Customers" />
+      <SectionTitle title="Customers" />
       {customers.length === 0 ? (
         <Empty title="No customers" body="Add companies on the website." />
       ) : (

@@ -19,8 +19,8 @@ export function AppShell({
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[var(--background)] text-stone-900">
-      <div className="grid min-h-screen grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)]">
+    <div className="h-dvh overflow-hidden bg-[var(--background)] text-stone-900">
+      <div className="grid h-full grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)]">
         <AppSidebar role={user.role} pathname={pathname} userName={user.name} />
         <MobileDrawer
           open={mobileOpen}
@@ -29,14 +29,16 @@ export function AppShell({
           userName={user.name}
           onClose={() => setMobileOpen(false)}
         />
-        <div className="flex min-h-screen min-w-0 flex-col">
+        <div className="flex min-h-0 min-w-0 flex-col">
           <AppHeader
             title={pageTitleFor(pathname)}
             user={user}
             roleLabel={roleLabelFor(user.role)}
             onOpenNav={() => setMobileOpen(true)}
           />
-          <main className="flex-1 px-4 py-6 pb-24 lg:px-8 lg:pb-8">{children}</main>
+          <main className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-6 pb-28 lg:px-8 lg:pb-8">
+            {children}
+          </main>
           <MobileBottomNav role={user.role} pathname={pathname} />
         </div>
       </div>

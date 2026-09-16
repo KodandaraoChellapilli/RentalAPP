@@ -1,46 +1,32 @@
-import { useCallback, useState } from "react";
-import { useFocusEffect, useRouter, type Href } from "expo-router";
+import { useCallback } from "react";
+import { useRouter, type Href } from "expo-router";
 import { Empty, ErrorText, Loading, Screen, Title } from "../../../src/components/ui";
 import { JobCard } from "../../../src/components/JobCard";
+import { useFocusedLoad } from "../../../src/hooks/useFocusedLoad";
 import { api } from "../../../src/lib/api";
-import { friendlyError } from "../../../src/lib/errors";
 import type { Job } from "../../../src/types";
 
 export default function JobsScreen() {
   const router = useRouter();
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
 
-  const load = useCallback(async () => {
-    setRefreshing(true);
-    try {
-      const data = await api<{ jobs: Job[] }>("/api/me/jobs");
-      setJobs(data.jobs);
-      setError(null);
-    } catch (err) {
-      setError(friendlyError(err, "Could not load jobs."));
-    } finally {
-      setRefreshing(false);
-    }
+  const fetchJobs = useCallback(async () => {
+    const data = await api<{ jobs: Job[] }>("/api/me/jobs");
+    return data.jobs;
   }, []);
 
-  useFocusEffect(
-    useCallback(() => {
-      load();
-    }, [load]),
-  );
+  const { data: jobs, error, refreshing, load, initialLoading } = useFocusedLoad(fetchJobs, "Could not load jobs.");
 
-  if (!jobs.length && !error && refreshing) return <Loading />;
+  if (initialLoading) return <Loading label="Loading assignments…" />;
 
   return (
     <Screen onRefresh={load} refreshing={refreshing}>
       <Title
+        kicker="Field work"
         title="Assigned work"
         subtitle="Open a delivery or pickup. Photos, notes, and a condition confirm are required before you can complete the job."
       />
       <ErrorText message={error} />
-      {jobs.length === 0 ? (
+      {!jobs?.length ? (
         <Empty title="No open assignments" body="When the owner assigns you a delivery or pickup, it will show here." />
       ) : (
         jobs.map((job) => (

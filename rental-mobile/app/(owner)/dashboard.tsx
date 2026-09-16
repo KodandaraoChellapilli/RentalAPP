@@ -1,11 +1,12 @@
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { Pressable, Text, View, StyleSheet } from "react-native";
-import { useFocusEffect, useRouter, type Href } from "expo-router";
-import { Badge, Card, Empty, ErrorText, Loading, Screen, Stat, Title } from "../../src/components/ui";
+import { useRouter, type Href } from "expo-router";
+import { Badge, Card, Empty, ErrorText, Loading, Screen, SectionTitle, Stat, Title } from "../../src/components/ui";
 import { EquipmentCard } from "../../src/components/EquipmentCard";
+import { useAuth } from "../../src/lib/auth";
+import { useFocusedLoad } from "../../src/hooks/useFocusedLoad";
 import { api } from "../../src/lib/api";
-import { friendlyError } from "../../src/lib/errors";
-import { formatWhen } from "../../src/lib/format";
+import { formatWhen, welcomeTitle } from "../../src/lib/format";
 import { colors, radius } from "../../src/theme";
 import type { Equipment, Job, Rental } from "../../src/types";
 
@@ -25,34 +26,18 @@ type Dashboard = {
 
 export default function OwnerDashboard() {
   const router = useRouter();
-  const [data, setData] = useState<Dashboard | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
+  const { user } = useAuth();
 
-  const load = useCallback(async () => {
-    setRefreshing(true);
-    try {
-      setData(await api<Dashboard>("/api/dashboard"));
-      setError(null);
-    } catch (err) {
-      setError(friendlyError(err, "Could not load dashboard."));
-    } finally {
-      setRefreshing(false);
-    }
-  }, []);
+  const fetchDashboard = useCallback(() => api<Dashboard>("/api/dashboard"), []);
+  const { data, error, refreshing, load, initialLoading } = useFocusedLoad(fetchDashboard, "Could not load dashboard.");
 
-  useFocusEffect(
-    useCallback(() => {
-      load();
-    }, [load]),
-  );
-
-  if (!data && !error) return <Loading />;
+  if (initialLoading) return <Loading label="Loading yard overview…" />;
 
   return (
     <Screen onRefresh={load} refreshing={refreshing}>
       <Title
-        title="Yard overview"
+        kicker="Ridgeline Rentals"
+        title={welcomeTitle(user?.name, "Yard overview")}
         subtitle="Live rentals, crew on shift, and machines that need attention. Charges use the same billing rules as the website."
       />
       <ErrorText message={error} />
@@ -74,7 +59,7 @@ export default function OwnerDashboard() {
             </View>
           </Card>
 
-          <Title title="Crew on site" />
+          <SectionTitle title="Crew on site" />
           {data.employees.length === 0 ? (
             <Empty title="No employees" body="Add crew on the website." />
           ) : (
@@ -99,7 +84,7 @@ export default function OwnerDashboard() {
             </Card>
           )}
 
-          <Title title="Active rentals" />
+          <SectionTitle title="Active rentals" />
           {data.activeRentals.length === 0 ? (
             <Empty title="Nothing on rent" body="Scheduled and active jobs will show here." />
           ) : (
@@ -128,7 +113,7 @@ export default function OwnerDashboard() {
             ))
           )}
 
-          <Title title="Open jobs" />
+          <SectionTitle title="Open jobs" />
           {data.openEvents.length === 0 ? (
             <Empty title="No open assignments" body="Deliveries and pickups will appear when scheduled." />
           ) : (
@@ -144,7 +129,7 @@ export default function OwnerDashboard() {
             ))
           )}
 
-          <Title title="Needs attention" />
+          <SectionTitle title="Needs attention" />
           {data.needingAttention.length === 0 ? (
             <Empty title="Fleet looks healthy" body="No machines in maintenance or out of service." />
           ) : (

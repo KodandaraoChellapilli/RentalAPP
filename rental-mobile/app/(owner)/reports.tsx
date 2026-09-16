@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { Text, View, StyleSheet } from "react-native";
 import { useFocusEffect } from "expo-router";
-import { Badge, Card, Empty, ErrorText, Loading, Screen, Stat, Title } from "../../src/components/ui";
+import { Badge, Card, Empty, ErrorText, Loading, Screen, SectionTitle, Stat, Title } from "../../src/components/ui";
 import { api } from "../../src/lib/api";
 import { friendlyError } from "../../src/lib/errors";
 import { formatWhen } from "../../src/lib/format";
@@ -65,7 +65,7 @@ export default function ReportsScreen() {
             </Text>
           </Card>
 
-          <Title title="Fleet by status" />
+          <SectionTitle title="Fleet by status" />
           <Card style={{ paddingVertical: 8 }}>
             {Object.keys(data.byStatus).length === 0 ? (
               <Text style={styles.meta}>No status breakdown yet.</Text>
@@ -82,7 +82,7 @@ export default function ReportsScreen() {
             )}
           </Card>
 
-          <Title title="Upcoming work" />
+          <SectionTitle title="Upcoming work" />
           {data.upcoming.length === 0 ? (
             <Empty title="Nothing upcoming" body="Scheduled deliveries and pickups will list here." />
           ) : (

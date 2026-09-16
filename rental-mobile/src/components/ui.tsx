@@ -1,16 +1,16 @@
-import { ReactNode } from "react";
+import { ReactNode, useMemo } from "react";
 import {
   ActivityIndicator,
+  FlatList,
   Pressable,
   RefreshControl,
-  ScrollView,
   StyleSheet,
   Text,
   View,
   type ViewStyle,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { colors, radius, space, statusColor, statusLabel, type } from "../theme";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { colors, radius, shadow, space, statusColor, statusLabel, type } from "../theme";
 import { OfflineBanner } from "./OfflineBanner";
 
 export function Screen({
@@ -18,34 +18,70 @@ export function Screen({
   onRefresh,
   refreshing,
   footer,
+  scroll = true,
 }: {
   children: ReactNode;
   onRefresh?: () => void;
   refreshing?: boolean;
   footer?: ReactNode;
+  scroll?: boolean;
 }) {
+  const insets = useSafeAreaInsets();
+  const bottomPad = footer ? 28 : 32 + Math.max(insets.bottom, 12);
+  const data = useMemo(() => [{ key: "screen-body" }], []);
+
+  const body = scroll ? (
+    <FlatList
+      style={styles.scroll}
+      data={data}
+      keyExtractor={(item) => item.key}
+      renderItem={() => <View>{children}</View>}
+      contentContainerStyle={[styles.content, { paddingBottom: bottomPad }]}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="on-drag"
+      showsVerticalScrollIndicator
+      alwaysBounceVertical
+      bounces
+      scrollEnabled
+      nestedScrollEnabled
+      refreshControl={
+        onRefresh ? <RefreshControl refreshing={Boolean(refreshing)} onRefresh={onRefresh} tintColor={colors.accent} /> : undefined
+      }
+    />
+  ) : (
+    <View style={[styles.scroll, styles.content, { paddingBottom: bottomPad }]}>{children}</View>
+  );
+
   return (
-    <SafeAreaView style={styles.safe} edges={[]}>
+    <View style={styles.safe}>
       <OfflineBanner />
-      <ScrollView
-        contentContainerStyle={[styles.content, footer ? styles.contentWithFooter : null]}
-        keyboardShouldPersistTaps="handled"
-        refreshControl={
-          onRefresh ? <RefreshControl refreshing={Boolean(refreshing)} onRefresh={onRefresh} /> : undefined
-        }
-      >
-        {children}
-      </ScrollView>
-      {footer ? <View style={styles.footer}>{footer}</View> : null}
-    </SafeAreaView>
+      {body}
+      {footer ? (
+        <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 12) }]}>{footer}</View>
+      ) : null}
+    </View>
   );
 }
 
-export function Title({ title, subtitle }: { title: string; subtitle?: string }) {
+export function Kicker({ children }: { children: string }) {
+  return <Text style={styles.kicker}>{children}</Text>;
+}
+
+export function Title({ title, subtitle, kicker }: { title: string; subtitle?: string; kicker?: string }) {
   return (
-    <View style={{ marginBottom: space.md }}>
+    <View style={styles.titleWrap}>
+      {kicker ? <Kicker>{kicker}</Kicker> : null}
       <Text style={styles.title}>{title}</Text>
       {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+    </View>
+  );
+}
+
+export function SectionTitle({ title, subtitle }: { title: string; subtitle?: string }) {
+  return (
+    <View style={styles.sectionWrap}>
+      <Text style={styles.sectionTitle}>{title}</Text>
+      {subtitle ? <Text style={styles.sectionSub}>{subtitle}</Text> : null}
     </View>
   );
 }
@@ -99,7 +135,7 @@ export function Button({
 export function Badge({ status }: { status: string }) {
   const color = statusColor(status);
   return (
-    <View style={[styles.badge, { backgroundColor: `${color}18`, borderColor: color }]}>
+    <View style={[styles.badge, { backgroundColor: `${color}14`, borderColor: color }]}>
       <Text style={[styles.badgeText, { color }]}>{statusLabel(status)}</Text>
     </View>
   );
@@ -151,10 +187,11 @@ export function Stat({ label, value }: { label: string; value: string | number }
   );
 }
 
-export function Loading() {
+export function Loading({ label = "Loading…" }: { label?: string }) {
   return (
     <View style={styles.loading}>
-      <ActivityIndicator color={colors.accent} />
+      <ActivityIndicator color={colors.accent} size="large" />
+      <Text style={styles.loadingText}>{label}</Text>
     </View>
   );
 }
@@ -185,18 +222,30 @@ export function Row({
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
-  content: { padding: space.screen, paddingBottom: 40 },
-  contentWithFooter: { paddingBottom: 24 },
+  scroll: { flex: 1 },
+  content: { padding: space.screen },
   footer: {
-    borderTopWidth: 1,
+    borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: colors.line,
     backgroundColor: colors.surface,
     paddingHorizontal: space.screen,
     paddingTop: 12,
-    paddingBottom: 16,
+    ...shadow.card,
   },
-  title: { fontSize: type.title, fontWeight: "700", color: colors.ink },
-  subtitle: { marginTop: 4, color: colors.muted, fontSize: 14, lineHeight: 20 },
+  kicker: {
+    color: colors.accent,
+    fontSize: type.kicker,
+    fontWeight: "700",
+    letterSpacing: 1.2,
+    textTransform: "uppercase",
+    marginBottom: 4,
+  },
+  titleWrap: { marginBottom: space.md },
+  title: { fontSize: type.title, fontWeight: "700", color: colors.ink, letterSpacing: -0.3, lineHeight: 32 },
+  subtitle: { marginTop: 6, color: colors.muted, fontSize: type.subtitle, lineHeight: 21 },
+  sectionWrap: { marginTop: space.sm, marginBottom: space.sm },
+  sectionTitle: { fontSize: 18, fontWeight: "700", color: colors.ink },
+  sectionSub: { marginTop: 4, color: colors.muted, fontSize: type.subtitle, lineHeight: 20 },
   card: {
     backgroundColor: colors.surface,
     borderColor: colors.line,
@@ -204,6 +253,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     padding: space.md,
     marginBottom: 12,
+    ...shadow.card,
   },
   button: {
     minHeight: 52,
@@ -218,27 +268,37 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: radius.pill,
     paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingVertical: 5,
   },
-  badgeText: { fontSize: 12, fontWeight: "700" },
-  emptyCard: { borderStyle: "dashed" },
+  badgeText: { fontSize: type.caption, fontWeight: "700" },
+  emptyCard: { borderStyle: "dashed", backgroundColor: colors.bg },
   emptyTitle: { fontSize: 16, fontWeight: "700", color: colors.ink, marginBottom: 4 },
   error: {
     backgroundColor: colors.dangerBg,
     borderRadius: radius.md,
     padding: 12,
     marginBottom: 12,
+    borderWidth: 1,
+    borderColor: `${colors.danger}33`,
   },
   errorOffline: {
     backgroundColor: colors.warningBg,
+    borderColor: `${colors.warning}33`,
   },
   errorText: { color: colors.danger, fontWeight: "700" },
   errorOfflineText: { color: colors.warning },
-  errorBody: { color: colors.danger, marginTop: 4, lineHeight: 18 },
+  errorBody: { color: colors.danger, marginTop: 4, lineHeight: 18, fontSize: type.subtitle },
   stat: { flex: 1, minWidth: "45%", marginBottom: 12 },
-  statLabel: { color: colors.muted, fontSize: 12, fontWeight: "700", textTransform: "uppercase" },
+  statLabel: {
+    color: colors.muted,
+    fontSize: type.kicker,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
+  },
   statValue: { fontSize: 22, fontWeight: "700", color: colors.ink, marginTop: 4 },
-  loading: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bg },
+  loading: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bg, gap: 12 },
+  loadingText: { color: colors.muted, fontWeight: "600" },
   row: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 4 },
   rowTitle: { fontSize: 16, fontWeight: "700", color: colors.ink },
 });

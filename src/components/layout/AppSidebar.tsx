@@ -71,7 +71,7 @@ export function AppSidebar({
   userName: string;
 }) {
   return (
-    <aside className="hidden border-r border-stone-200 bg-white lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col">
+    <aside className="hidden border-r border-stone-200 bg-white lg:flex lg:h-full lg:flex-col">
       <div className="border-b border-stone-200 px-5 py-4">
         <Link href={homeHrefFor(role)} className="flex items-center gap-3">
           <BrandMark className="h-10 w-10" />

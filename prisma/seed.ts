@@ -1,5 +1,6 @@
 import { mkdir, writeFile } from "fs/promises";
 import path from "path";
+import { deflateSync } from "zlib";
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
 
@@ -13,27 +14,96 @@ function hoursFromNow(hours: number) {
   return new Date(Date.now() + hours * 60 * 60 * 1000);
 }
 
-function svgPhoto(label: string, subtitle: string, color: string) {
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
-  <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="${color}"/>
-      <stop offset="100%" stop-color="#1c1917"/>
-    </linearGradient>
-  </defs>
-  <rect width="1200" height="800" fill="url(#g)"/>
-  <rect x="80" y="120" width="1040" height="560" rx="28" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)"/>
-  <text x="600" y="360" text-anchor="middle" font-family="Arial, sans-serif" font-size="48" fill="#fff" font-weight="700">${label}</text>
-  <text x="600" y="430" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" fill="#fde68a">${subtitle}</text>
-  <text x="600" y="500" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" fill="#e7e5e4">Condition documentation photo</text>
-</svg>`;
+function crc32(buf: Buffer) {
+  let c = ~0;
+  for (let i = 0; i < buf.length; i++) {
+    c ^= buf[i];
+    for (let k = 0; k < 8; k++) c = (c >>> 1) ^ (0xedb88320 & -(c & 1));
+  }
+  return ~c >>> 0;
 }
 
-async function saveSvg(filename: string, contents: string) {
+function pngChunk(type: string, data: Buffer) {
+  const len = Buffer.alloc(4);
+  len.writeUInt32BE(data.length);
+  const typeB = Buffer.from(type);
+  const crc = Buffer.alloc(4);
+  crc.writeUInt32BE(crc32(Buffer.concat([typeB, data])));
+  return Buffer.concat([len, typeB, data, crc]);
+}
+
+/** Solid RN-friendly demo PNGs (SVG is not supported by React Native Image). */
+function demoPng(
+  paint: (x: number, y: number, w: number, h: number) => [number, number, number],
+  w = 640,
+  h = 400,
+) {
+  const raw = Buffer.alloc((w * 3 + 1) * h);
+  for (let y = 0; y < h; y++) {
+    raw[y * (w * 3 + 1)] = 0;
+    for (let x = 0; x < w; x++) {
+      const [r, g, b] = paint(x, y, w, h);
+      const i = y * (w * 3 + 1) + 1 + x * 3;
+      raw[i] = r;
+      raw[i + 1] = g;
+      raw[i + 2] = b;
+    }
+  }
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(w, 0);
+  ihdr.writeUInt32BE(h, 4);
+  ihdr[8] = 8;
+  ihdr[9] = 2;
+  return Buffer.concat([
+    Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
+    pngChunk("IHDR", ihdr),
+    pngChunk("IDAT", deflateSync(raw)),
+    pngChunk("IEND", Buffer.alloc(0)),
+  ]);
+}
+
+const DEMO_SCENES: Record<string, (x: number, y: number, w: number, h: number) => [number, number, number]> = {
+  "306-delivery.png": (x, y, w, h) => {
+    if (y < h * 0.42) return [120 + Math.floor((x / w) * 40), 170, 210];
+    if (y > h * 0.78) return [110, 90, 60];
+    const cx = w * 0.45;
+    const cy = h * 0.55;
+    if (Math.abs(x - cx) < w * 0.18 && Math.abs(y - cy) < h * 0.16) return [230, 170, 40];
+    if (x > cx && x < cx + w * 0.28 && y > cy - h * 0.08 && y < cy) return [200, 140, 30];
+    return [150, 145, 130];
+  },
+  "306-pickup.png": (x, y, w, h) => {
+    if (y < h * 0.4) return [90, 130, 170];
+    if (y > h * 0.8) return [90, 80, 55];
+    const cx = w * 0.5;
+    const cy = h * 0.58;
+    if (Math.abs(x - cx) < w * 0.2 && Math.abs(y - cy) < h * 0.18) return [235, 180, 45];
+    return [140, 138, 125];
+  },
+  "218-delivery.png": (x, y, w, h) => {
+    if (y < h * 0.45) return [160, 190, 220];
+    if (y > h * 0.75) return [100, 95, 80];
+    if (x > w * 0.25 && x < w * 0.75 && y > h * 0.4 && y < h * 0.7) return [50, 110, 180];
+    return [130, 125, 110];
+  },
+  "218-pickup.png": (x, y, w, h) => {
+    if (y < h * 0.4) return [140, 170, 200];
+    if (y > h * 0.78) return [95, 85, 65];
+    if (x > w * 0.2 && x < w * 0.8 && y > h * 0.38 && y < h * 0.72) return [40, 95, 160];
+    return [125, 120, 105];
+  },
+  "412-delivery.png": (x, y, w, h) => {
+    if (y < h * 0.38) return [180, 200, 220];
+    if (y > h * 0.8) return [85, 80, 70];
+    if (x > w * 0.3 && x < w * 0.7 && y > h * 0.35 && y < h * 0.75) return [200, 55, 40];
+    return [145, 140, 130];
+  },
+};
+
+async function saveDemoPhoto(filename: keyof typeof DEMO_SCENES) {
   const dir = path.join(process.cwd(), "public", "uploads");
   await mkdir(dir, { recursive: true });
-  await writeFile(path.join(dir, filename), contents);
+  await writeFile(path.join(dir, filename), demoPng(DEMO_SCENES[filename]));
   return `/uploads/${filename}`;
 }
 
@@ -80,7 +150,7 @@ async function main() {
     data: {
       email: "admin@rental.app",
       passwordHash,
-      name: "Alex Morgan",
+      name: "Sam Carson",
       role: "ADMIN",
       phone: "(555) 100-0001",
     },
@@ -317,22 +387,11 @@ async function main() {
     ],
   });
 
-  const photo306d = await saveSvg(
-    "306-delivery.svg",
-    svgPhoto("Equipment #306", "Delivery / Before", "#b45309"),
-  );
-  const photo412d = await saveSvg(
-    "412-delivery.svg",
-    svgPhoto("Equipment #412", "Delivery / Before", "#1d4ed8"),
-  );
-  const photo218d = await saveSvg(
-    "218-delivery.svg",
-    svgPhoto("Equipment #218", "Delivery / Before", "#047857"),
-  );
-  const photo218p = await saveSvg(
-    "218-pickup.svg",
-    svgPhoto("Equipment #218", "Pickup / After", "#0f766e"),
-  );
+  const photo306d = await saveDemoPhoto("306-delivery.png");
+  const photo412d = await saveDemoPhoto("412-delivery.png");
+  const photo218d = await saveDemoPhoto("218-delivery.png");
+  const photo218p = await saveDemoPhoto("218-pickup.png");
+  await saveDemoPhoto("306-pickup.png");
 
   await prisma.photo.createMany({
     data: [

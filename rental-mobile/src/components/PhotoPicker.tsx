@@ -76,7 +76,13 @@ export function PhotoPicker({
         </View>
       </View>
       {photos.length > 0 ? (
-        <ScrollView horizontal contentContainerStyle={styles.preview}>
+        <ScrollView
+          horizontal
+          nestedScrollEnabled
+          directionalLockEnabled
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.preview}
+        >
           {photos.map((photo, index) => (
             <View key={`${photo.uri}-${index}`} style={styles.thumbWrap}>
               <Pressable onPress={() => setPreview(photo)}>

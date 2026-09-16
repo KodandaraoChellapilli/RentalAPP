@@ -15,7 +15,7 @@ export function SignOutButton() {
 
   return (
     <>
-      <Pressable onPress={() => setOpen(true)} style={styles.press} hitSlop={8}>
+      <Pressable onPress={() => setOpen(true)} style={styles.press} hitSlop={10} accessibilityRole="button">
         <Text style={styles.label}>Sign out</Text>
       </Pressable>
       <Sheet
@@ -32,6 +32,6 @@ export function SignOutButton() {
 }
 
 const styles = StyleSheet.create({
-  press: { paddingHorizontal: 16 },
-  label: { color: colors.amber, fontWeight: "700" },
+  press: { paddingHorizontal: 16, minHeight: 44, justifyContent: "center" },
+  label: { color: colors.amber, fontWeight: "700", fontSize: 14 },
 });

@@ -1,5 +1,6 @@
 import { Redirect, Tabs } from "expo-router";
 import { useAuth } from "../../src/lib/auth";
+import { HeaderIdentity } from "../../src/components/HeaderIdentity";
 import { SignOutButton } from "../../src/components/SignOutButton";
 import { tabBarOptions, tabIcon } from "../../src/components/nav";
 
@@ -11,6 +12,7 @@ export default function OwnerLayout() {
     <Tabs
       screenOptions={{
         ...tabBarOptions,
+        headerLeft: () => <HeaderIdentity />,
         headerRight: () => <SignOutButton />,
       }}
     >

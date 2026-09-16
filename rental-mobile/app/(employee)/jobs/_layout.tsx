@@ -10,7 +10,7 @@ export default function JobsLayout() {
         headerTintColor: colors.white,
         headerTitleStyle: { fontWeight: "700" },
         headerBackTitle: "Jobs",
-        contentStyle: { backgroundColor: colors.bg },
+        contentStyle: { backgroundColor: colors.bg, flex: 1 },
       }}
     >
       <Stack.Screen
