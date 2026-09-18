@@ -4,7 +4,7 @@ import { LiveCharge } from "@/components/LiveCharge";
 import { PageHeader } from "@/components/PageHeader";
 import { EquipmentConditionHistory } from "@/components/photos/EquipmentConditionHistory";
 import { StatusBadge } from "@/components/StatusBadge";
-import { formatDuration, formatRate } from "@/lib/billing";
+import { formatRate } from "@/lib/billing";
 import { photoInclude } from "@/lib/photos";
 import { prisma } from "@/lib/prisma";
 import { formatDateTime } from "@/lib/utils";
@@ -104,6 +104,7 @@ export default async function EquipmentDetailPage({ params }: { params: Promise<
               ) : null}
             </div>
             <LiveCharge
+              asOf={Date.now()}
               startAt={current.startAt}
               endAt={current.endAt}
               rate={current.rateSnapshot}
@@ -123,55 +124,8 @@ export default async function EquipmentDetailPage({ params }: { params: Promise<
         />
       </div>
 
-      <section className="mb-8">
-        <h2 className="mb-3 font-semibold">Rental billing history</h2>
-        <div className="space-y-4">
-          {equipment.rentals.length === 0 ? (
-            <div className="card px-6 py-10 text-center text-sm text-stone-500">
-              No rental history yet. Schedule a delivery to start a record.
-            </div>
-          ) : (
-            equipment.rentals.map((rental) => (
-              <article key={rental.id} className="card p-5">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <p className="font-semibold">{rental.customer.name}</p>
-                    <p className="text-sm text-stone-500">{rental.destination}</p>
-                  </div>
-                  <StatusBadge kind="rental" status={rental.status} />
-                </div>
-                <div className="mt-3 grid gap-2 text-sm text-stone-600 md:grid-cols-2">
-                  <p>Delivered: {formatDateTime(rental.startAt)}</p>
-                  <p>Picked up: {formatDateTime(rental.endAt)}</p>
-                  <p>Rate: {formatRate(rental.rateSnapshot, rental.billingUnitSnapshot)}</p>
-                  <p>
-                    Duration:{" "}
-                    {rental.startAt
-                      ? formatDuration(
-                          (rental.endAt ? new Date(rental.endAt).getTime() : Date.now()) -
-                            new Date(rental.startAt).getTime(),
-                        )
-                      : "—"}
-                  </p>
-                  {rental.notes ? <p className="md:col-span-2">Condition notes: {rental.notes}</p> : null}
-                  <LiveCharge
-                    compact
-                    startAt={rental.startAt}
-                    endAt={rental.endAt}
-                    rate={rental.rateSnapshot}
-                    unit={rental.billingUnitSnapshot}
-                    status={rental.status}
-                    finalAmount={rental.finalAmount}
-                  />
-                </div>
-              </article>
-            ))
-          )}
-        </div>
-      </section>
-
       <section>
-        <h2 className="mb-3 font-semibold">Assignments & events</h2>
+        <h2 className="mb-3 font-semibold">Transports</h2>
         <div className="card divide-y divide-stone-100">
           {equipment.events.length === 0 ? (
             <p className="px-5 py-6 text-sm text-stone-500">No assignments yet.</p>

@@ -4,8 +4,8 @@ export function employeeJobHref(type: string, eventId: string, rentalId?: string
 }
 
 export function adminEventHref(type: string) {
-  if (type === "PICKUP") return "/admin/pickups";
-  if (type === "DELIVERY") return "/admin/deliveries";
+  if (type === "PICKUP") return "/admin/transports?type=PICKUP";
+  if (type === "DELIVERY") return "/admin/transports?type=DELIVERY";
   return "/admin/calendar";
 }
 

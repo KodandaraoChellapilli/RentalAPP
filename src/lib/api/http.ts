@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import type { Role } from "@/lib/constants";
+import { hydrateSessionUser } from "@/lib/hydrate-session";
+import { isAllowedPhotoFile } from "@/lib/photo-files";
 import { SESSION_COOKIE, decodeSession, type SessionUser } from "@/lib/session-token";
 import { ServiceError } from "@/lib/services/errors";
 
@@ -36,9 +38,9 @@ export function publicOrigin(request: NextRequest) {
 export async function getApiUser(request: NextRequest): Promise<SessionUser | null> {
   const header = request.headers.get("authorization") || "";
   const bearer = header.toLowerCase().startsWith("bearer ") ? header.slice(7).trim() : "";
-  if (bearer) return decodeSession(bearer);
+  if (bearer) return hydrateSessionUser(await decodeSession(bearer));
   const jar = await cookies();
-  return decodeSession(jar.get(SESSION_COOKIE)?.value);
+  return hydrateSessionUser(await decodeSession(jar.get(SESSION_COOKIE)?.value));
 }
 
 export async function requireApiUser(request: NextRequest, roles?: Role[]) {
@@ -49,5 +51,7 @@ export async function requireApiUser(request: NextRequest, roles?: Role[]) {
 }
 
 export function filesFromRequest(formData: FormData, key = "photos") {
-  return formData.getAll(key).filter((item): item is File => item instanceof File && item.size > 0);
+  return formData
+    .getAll(key)
+    .filter((item): item is File => item instanceof File && isAllowedPhotoFile(item));
 }

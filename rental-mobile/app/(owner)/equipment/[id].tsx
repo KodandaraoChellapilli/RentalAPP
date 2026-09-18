@@ -107,10 +107,13 @@ export default function EquipmentDetail() {
               <Text style={{ color: colors.muted, marginTop: 4 }}>
                 {formatWhen(rental.startAt)} → {formatWhen(rental.endAt)}
               </Text>
+              {rental.deliveredBy ? <Text style={{ color: colors.muted }}>Delivered by {rental.deliveredBy}</Text> : null}
+              {rental.pickedUpBy ? <Text style={{ color: colors.muted }}>Picked up by {rental.pickedUpBy}</Text> : null}
               <Text style={{ marginTop: 6, fontWeight: "700", color: colors.ink }}>
                 {rental.charge.formatted}
                 {rental.charge.isEstimate ? " estimated" : " final"}
               </Text>
+              {rental.rateLabel ? <Text style={{ color: colors.muted }}>{rental.rateLabel}</Text> : null}
               <PhotoGrid label="Before delivery" photos={before} />
               <PhotoGrid label="After pickup" photos={after} />
               {rental.notes ? (

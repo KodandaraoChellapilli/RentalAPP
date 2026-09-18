@@ -16,6 +16,7 @@ type Dashboard = Awaited<ReturnType<typeof getOwnerDashboard>>;
 
 export function OwnerDashboard({ data }: { data: Dashboard }) {
   const { counts } = data;
+  const asOf = Date.now();
 
   return (
     <div className="space-y-6">
@@ -44,18 +45,18 @@ export function OwnerDashboard({ data }: { data: Dashboard }) {
           title="Scheduled deliveries"
           value={counts.openDeliveries}
           subtitle={`${data.todayDeliveries} today`}
-          href="/admin/deliveries"
+          href="/admin/transports?type=DELIVERY"
         />
         <StatCard
           title="Scheduled pickups"
           value={counts.openPickups}
           subtitle={`${data.todayPickups} today`}
-          href="/admin/pickups"
+          href="/admin/transports?type=PICKUP"
         />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard title="Today's jobs" value={counts.todayJobs} subtitle="Deliveries and pickups" href="/admin/calendar" />
+        <StatCard title="Today's jobs" value={counts.todayJobs} subtitle="Deliveries and pickups" href="/admin/transports" />
         <StatCard
           title="Employees clocked in"
           value={data.clockedInCount}
@@ -192,6 +193,7 @@ export function OwnerDashboard({ data }: { data: Dashboard }) {
                   rental.billingUnitSnapshot,
                   rental.status,
                   rental.finalAmount,
+                  asOf,
                 );
                 return (
                   <tr key={rental.id}>
@@ -212,6 +214,7 @@ export function OwnerDashboard({ data }: { data: Dashboard }) {
                       {rental.status === "ACTIVE" ? (
                         <LiveCharge
                           compact
+                          asOf={asOf}
                           startAt={rental.startAt}
                           rate={rental.rateSnapshot}
                           unit={rental.billingUnitSnapshot}

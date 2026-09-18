@@ -1,7 +1,10 @@
+import { assertCanAccessEvent } from "@/lib/api/access";
 import { calculateCharge } from "@/lib/billing";
 import type { BillingUnit } from "@/lib/constants";
+import { isAllowedPhotoFile } from "@/lib/photo-files";
 import { prisma } from "@/lib/prisma";
 import { savePhotos } from "@/lib/photos";
+import { notifyRentalEvent } from "@/lib/services/notifications";
 import { ServiceError } from "@/lib/services/errors";
 import { revalidateRentalSurfaces } from "@/lib/services/revalidate";
 import type { SessionUser } from "@/lib/session-token";
@@ -23,11 +26,14 @@ export async function completeDeliveryService(opts: {
   }
   if (notes.length < 3) throw new ServiceError("Condition notes are required.");
   if (!opts.conditionConfirmed) throw new ServiceError("Confirm the equipment condition before continuing.");
-  const photos = opts.photos.filter((file) => file.size > 0 && (!file.type || file.type.startsWith("image/")));
+  const photos = opts.photos.filter((file) => isAllowedPhotoFile(file));
   if (photos.length === 0) throw new ServiceError("At least one before-delivery photo is required.");
 
   const equipment = await prisma.equipment.findUnique({ where: { id: opts.equipmentId } });
   if (!equipment) throw new ServiceError("Equipment not found.", 404);
+  if (equipment.status === "MAINTENANCE" || equipment.status === "OUT_OF_SERVICE") {
+    throw new ServiceError("This machine is not available for delivery.");
+  }
 
   const now = new Date();
   let rental = opts.rentalId ? await prisma.rental.findUnique({ where: { id: opts.rentalId } }) : null;
@@ -37,6 +43,20 @@ export async function completeDeliveryService(opts: {
     if (event?.rentalId) {
       rental = await prisma.rental.findUnique({ where: { id: event.rentalId } });
     }
+  }
+
+  if (rental && (rental.status === "ACTIVE" || rental.status === "COMPLETED" || rental.status === "CANCELLED")) {
+    throw new ServiceError("This rental is already delivered or closed.");
+  }
+
+  const alreadyOnRent = await prisma.rental.findFirst({
+    where: { equipmentId: opts.equipmentId, status: "ACTIVE" },
+  });
+  if (alreadyOnRent) throw new ServiceError("This machine is already on rent.");
+
+  if (opts.eventId) {
+    const event = await prisma.scheduleEvent.findUnique({ where: { id: opts.eventId } });
+    if (event) assertCanAccessEvent(opts.user, event.employeeId);
   }
 
   if (!rental) {
@@ -96,6 +116,18 @@ export async function completeDeliveryService(opts: {
   });
 
   revalidateRentalSurfaces(opts.equipmentId, rental.id, opts.customerId);
+
+  const customer = await prisma.customer.findUnique({ where: { id: opts.customerId } });
+  await notifyRentalEvent({
+    type: "EQUIPMENT_DELIVERED",
+    customerName: customer?.name,
+    customerEmail: customer?.email,
+    customerPhone: customer?.phone,
+    equipmentLabel: `#${equipment.number} ${equipment.name}`,
+    location: opts.destination.trim(),
+    when: now,
+  });
+
   return { rentalId: rental.id, equipmentId: opts.equipmentId, photoCount: saved.length };
 }
 
@@ -116,7 +148,7 @@ export async function completePickupService(opts: {
   if (opts.hasIssue !== "yes" && opts.hasIssue !== "no") {
     throw new ServiceError("Report whether there is damage or an issue.");
   }
-  const photos = opts.photos.filter((file) => file.size > 0 && (!file.type || file.type.startsWith("image/")));
+  const photos = opts.photos.filter((file) => isAllowedPhotoFile(file));
   if (photos.length === 0) throw new ServiceError("At least one after-pickup photo is required.");
 
   const hasIssue = opts.hasIssue === "yes";
@@ -134,7 +166,10 @@ export async function completePickupService(opts: {
     where: { id: opts.rentalId },
     include: { equipment: true },
   });
-  if (!rental || !rental.startAt) throw new ServiceError("Rental is not active.");
+  if (!rental || !rental.startAt) throw new ServiceError("Rental is not active.", 404);
+  if (rental.status !== "ACTIVE") throw new ServiceError("Only active rentals can be picked up.");
+
+  await assertStaffCanWorkRental(opts.user, rental.id, opts.eventId || null, "PICKUP");
 
   const now = new Date();
   const charge = calculateCharge(
@@ -184,6 +219,18 @@ export async function completePickupService(opts: {
   });
 
   revalidateRentalSurfaces(rental.equipmentId, rental.id, rental.customerId);
+
+  const customer = await prisma.customer.findUnique({ where: { id: rental.customerId } });
+  await notifyRentalEvent({
+    type: "EQUIPMENT_PICKED_UP",
+    customerName: customer?.name,
+    customerEmail: customer?.email,
+    customerPhone: customer?.phone,
+    equipmentLabel: `#${rental.equipment.number} ${rental.equipment.name}`,
+    location: rental.destination,
+    when: now,
+  });
+
   return {
     rentalId: rental.id,
     equipmentId: rental.equipmentId,
@@ -191,6 +238,44 @@ export async function completePickupService(opts: {
     afterStatus,
     photoCount: saved.length,
   };
+}
+
+/** Employees may only work rentals tied to their assigned schedule events. */
+export async function assertStaffCanWorkRental(
+  user: SessionUser,
+  rentalId: string,
+  eventId: string | null,
+  type: "DELIVERY" | "PICKUP",
+) {
+  if (user.role === "ADMIN") return;
+
+  if (eventId) {
+    const event = await prisma.scheduleEvent.findUnique({ where: { id: eventId } });
+    if (!event || event.type !== type) {
+      throw new ServiceError(`${type === "PICKUP" ? "Pickup" : "Delivery"} not found.`, 404);
+    }
+    assertCanAccessEvent(user, event.employeeId);
+    return;
+  }
+
+  const assigned = await prisma.scheduleEvent.findFirst({
+    where: {
+      rentalId,
+      employeeId: user.id,
+      OR: [{ type, completedAt: null }, { type: "DELIVERY" }],
+    },
+  });
+  if (assigned) return;
+
+  const openJob = await prisma.scheduleEvent.findFirst({
+    where: { rentalId, type, completedAt: null },
+  });
+  if (openJob) {
+    assertCanAccessEvent(user, openJob.employeeId);
+    return;
+  }
+
+  throw new ServiceError("You do not have access.", 403);
 }
 
 async function completeOrCreateEvent(opts: {

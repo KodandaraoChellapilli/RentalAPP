@@ -7,7 +7,7 @@ import { LiveCharge } from "@/components/LiveCharge";
 import { StatusBadge } from "@/components/StatusBadge";
 import { assignScheduleEmployee } from "@/lib/actions/rentals";
 import { EVENT_TYPE_LABELS, type EventType } from "@/lib/constants";
-import { cn, formatDateTime } from "@/lib/utils";
+import { calendarDayKey, cn, formatDateTime, formatTime, localDayKey } from "@/lib/utils";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 
 type CalendarEvent = {
@@ -35,26 +35,34 @@ type CalendarEvent = {
 export function CalendarMonth({
   events,
   employees,
+  initialYear,
+  initialMonth,
+  initialDate,
+  asOf,
 }: {
   events: CalendarEvent[];
   employees: { id: string; name: string }[];
+  initialYear: number;
+  initialMonth: number;
+  initialDate: number;
+  asOf?: number | string | Date | null;
 }) {
-  const [cursor, setCursor] = useState(() => new Date());
-  const [selected, setSelected] = useState<Date>(() => new Date());
+  const [cursor, setCursor] = useState(() => new Date(initialYear, initialMonth, 1));
+  const [selected, setSelected] = useState(() => new Date(initialYear, initialMonth, initialDate));
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
   const days = useMemo(() => {
-    const start = startOfWeek(startOfMonth(cursor));
-    const end = endOfWeek(endOfMonth(cursor));
+    const start = startOfWeek(startOfMonth(cursor), { weekStartsOn: 0 });
+    const end = endOfWeek(endOfMonth(cursor), { weekStartsOn: 0 });
     return eachDayOfInterval({ start, end });
   }, [cursor]);
 
-  const selectedEvents = events.filter((event) => isSameDay(new Date(event.startAt), selected));
+  const selectedEvents = events.filter((event) => calendarDayKey(event.startAt) === localDayKey(selected));
   const selectedEvent = events.find((event) => event.id === selectedEventId) || selectedEvents[0] || null;
 
   function chooseDay(day: Date) {
     setSelected(day);
-    const first = events.find((event) => isSameDay(new Date(event.startAt), day));
+    const first = events.find((event) => calendarDayKey(event.startAt) === localDayKey(day));
     setSelectedEventId(first?.id || null);
   }
 
@@ -84,11 +92,11 @@ export function CalendarMonth({
         </div>
         <div className="grid grid-cols-7 gap-1">
           {days.map((day) => {
-            const dayEvents = events.filter((event) => isSameDay(new Date(event.startAt), day));
+            const dayEvents = events.filter((event) => calendarDayKey(event.startAt) === localDayKey(day));
             const current = isSameDay(day, selected);
             return (
               <div
-                key={day.toISOString()}
+                key={localDayKey(day)}
                 className={cn(
                   "min-h-24 rounded-xl border p-2 text-left",
                   isSameMonth(day, cursor) ? "bg-white" : "bg-stone-50 text-stone-400",
@@ -116,7 +124,7 @@ export function CalendarMonth({
                             : "bg-sky-100 text-sky-800",
                       )}
                     >
-                      {format(new Date(event.startAt), "h:mm a")} {event.equipment ? `#${event.equipment.number}` : event.title}
+                      {formatTime(event.startAt)} {event.equipment ? `#${event.equipment.number}` : event.title}
                     </button>
                   ))}
                   {dayEvents.length > 3 ? <p className="text-[10px] text-stone-500">+{dayEvents.length - 3} more</p> : null}
@@ -141,7 +149,7 @@ export function CalendarMonth({
                   event.id === selectedEvent?.id ? "bg-stone-900 text-white" : "bg-stone-100 text-stone-700",
                 )}
               >
-                {format(new Date(event.startAt), "h:mm a")} {event.equipment ? `#${event.equipment.number}` : event.type}
+                {formatTime(event.startAt)} {event.equipment ? `#${event.equipment.number}` : event.type}
               </button>
             ))}
           </div>
@@ -150,7 +158,7 @@ export function CalendarMonth({
           {!selectedEvent ? (
             <p className="text-sm text-stone-500">No scheduled deliveries or pickups.</p>
           ) : (
-            <EventDetail event={selectedEvent} employees={employees} />
+            <EventDetail event={selectedEvent} employees={employees} asOf={asOf} />
           )}
         </div>
       </div>
@@ -161,9 +169,11 @@ export function CalendarMonth({
 function EventDetail({
   event,
   employees,
+  asOf,
 }: {
   event: CalendarEvent;
   employees: { id: string; name: string }[];
+  asOf?: number | string | Date | null;
 }) {
   const recordHref =
     event.completedAt
@@ -197,6 +207,7 @@ function EventDetail({
           <p className="text-sm text-stone-600">Expected pickup {formatDateTime(event.rental.expectedPickupAt)}</p>
           <LiveCharge
             compact
+            asOf={asOf ?? event.rental.startAt}
             startAt={event.rental.startAt}
             rate={event.rental.rateSnapshot}
             unit={event.rental.billingUnitSnapshot}

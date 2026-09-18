@@ -39,3 +39,12 @@ test("completed rentals use the stored final amount", () => {
   assert.equal(charge.isEstimate, false);
   assert.equal(charge.amount, roundMoney(925.5));
 });
+
+test("active estimates use the provided asOf time instead of the clock", () => {
+  const start = new Date("2026-09-10T08:00:00");
+  const asOf = new Date("2026-09-12T08:00:00");
+  const charge = rentalCharge(start, null, 300, "DAILY", "ACTIVE", null, asOf);
+  assert.equal(charge.isEstimate, true);
+  assert.equal(charge.billedUnits, 2);
+  assert.equal(charge.amount, 600);
+});

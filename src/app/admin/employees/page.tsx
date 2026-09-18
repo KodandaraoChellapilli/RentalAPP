@@ -43,7 +43,7 @@ export default async function EmployeesPage() {
               <tr>
                 <th>Employee</th>
                 <th>Clock</th>
-                <th>Today's hours</th>
+                <th>Today&apos;s hours</th>
                 <th>Open jobs</th>
                 <th>Assignments</th>
               </tr>

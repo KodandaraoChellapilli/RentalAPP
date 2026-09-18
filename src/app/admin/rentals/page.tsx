@@ -13,6 +13,7 @@ export default async function RentalsPage() {
     <div>
       <PageHeader title="Rentals" subtitle="Active, scheduled, and completed rental records." />
       <RentalsTable
+        asOf={Date.now()}
         items={rentals.map((rental) => ({
           id: rental.id,
           equipmentId: rental.equipmentId,

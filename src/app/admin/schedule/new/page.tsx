@@ -22,7 +22,7 @@ export default async function NewSchedulePage({
 
   return (
     <div className="mx-auto max-w-2xl">
-      <PageHeader title="Schedule a job" subtitle="Assign an employee to a delivery, pickup, or rental window." />
+      <PageHeader title="Schedule a transport" subtitle="Start a rental delivery or schedule a pickup. Assign an employee when the job is ready." />
       <ErrorBanner message={error} />
       <form action={createSchedule} className="card space-y-4 p-6">
         <label className="block">

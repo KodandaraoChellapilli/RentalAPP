@@ -5,9 +5,13 @@ import { requireUser } from "@/lib/session";
 import { filesFromForm } from "@/lib/photos";
 import { ServiceError } from "@/lib/services/errors";
 import { completeDeliveryService, completePickupService } from "@/lib/services/rentals";
+import {
+  confirmCustomerDeliveryService,
+  createScheduleService,
+  requestCustomerPickupService,
+} from "@/lib/services/schedule";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { revalidateRentalSurfaces } from "@/lib/services/revalidate";
 
 export async function createSchedule(formData: FormData) {
   await requireUser(["ADMIN"]);
@@ -20,103 +24,28 @@ export async function createSchedule(formData: FormData) {
   const destination = String(formData.get("destination") || "").trim() || null;
   const expectedPickupAtRaw = String(formData.get("expectedPickupAt") || "");
   const expectedPickupAt = expectedPickupAtRaw ? new Date(expectedPickupAtRaw) : null;
+  const rentalId = String(formData.get("rentalId") || "") || null;
 
-  if (!equipmentId || !customerId || Number.isNaN(startAt.getTime())) {
-    redirect("/admin/schedule/new?error=Equipment,+customer,+and+date+are+required");
-  }
-
-  const equipment = await prisma.equipment.findUnique({ where: { id: equipmentId } });
-  if (!equipment) redirect("/admin/schedule/new?error=Equipment+not+found");
-
-  let rentalId = String(formData.get("rentalId") || "") || null;
-
-  if (type === "DELIVERY" || type === "RENTAL") {
-    const existing =
-      rentalId
-        ? await prisma.rental.findUnique({ where: { id: rentalId } })
-        : await prisma.rental.findFirst({
-            where: { equipmentId, status: { in: ["ACTIVE", "SCHEDULED"] } },
-            orderBy: { createdAt: "desc" },
-          });
-
-    if (existing) {
-      if (existing.customerId !== customerId) {
-        redirect("/admin/schedule/new?error=That+equipment+already+has+an+open+rental+with+another+customer");
-      }
-      rentalId = existing.id;
-      await prisma.rental.update({
-        where: { id: existing.id },
-        data: {
-          destination: destination || existing.destination,
-          expectedPickupAt: expectedPickupAt || existing.expectedPickupAt,
-          notes: notes || existing.notes,
-        },
-      });
-    } else {
-      const rental = await prisma.rental.create({
-        data: {
-          equipmentId,
-          customerId,
-          status: "SCHEDULED",
-          destination,
-          expectedPickupAt,
-          rateSnapshot: equipment.rate,
-          billingUnitSnapshot: equipment.billingUnit,
-          notes,
-        },
-      });
-      rentalId = rental.id;
-    }
-    if (equipment.status === "AVAILABLE") {
-      await prisma.equipment.update({
-        where: { id: equipmentId },
-        data: { status: "SCHEDULED" },
-      });
-    }
-  }
-
-  if (type === "PICKUP") {
-    const active =
-      rentalId
-        ? await prisma.rental.findUnique({ where: { id: rentalId } })
-        : await prisma.rental.findFirst({
-            where: { equipmentId, status: { in: ["ACTIVE", "SCHEDULED"] } },
-            orderBy: { createdAt: "desc" },
-          });
-    if (!active) {
-      redirect("/admin/schedule/new?error=No+active+rental+found+for+pickup");
-    }
-    rentalId = active.id;
-    await prisma.rental.update({
-      where: { id: active.id },
-      data: {
-        expectedPickupAt: expectedPickupAt || startAt,
-        destination: destination || active.destination,
-      },
-    });
-    if (active.status === "ACTIVE") {
-      await prisma.equipment.update({
-        where: { id: equipmentId },
-        data: { status: "PICKUP_SCHEDULED" },
-      });
-    }
-  }
-
-  await prisma.scheduleEvent.create({
-    data: {
+  try {
+    await createScheduleService({
       type,
-      title: `${type === "PICKUP" ? "Pick up" : "Deliver"} #${equipment.number}`,
-      startAt,
       equipmentId,
       customerId,
       employeeId,
-      rentalId,
+      startAt,
       notes,
       destination,
-    },
-  });
+      expectedPickupAt,
+      rentalId,
+      source: "STAFF",
+    });
+  } catch (error) {
+    if (error instanceof ServiceError) {
+      redirect(`/admin/schedule/new?error=${encodeURIComponent(error.message)}`);
+    }
+    throw error;
+  }
 
-  revalidateRentalSurfaces(equipmentId, rentalId || undefined, customerId);
   redirect("/admin/calendar");
 }
 
@@ -146,13 +75,17 @@ export async function completeDelivery(formData: FormData) {
 export async function completePickup(formData: FormData) {
   const user = await requireUser(["EMPLOYEE", "ADMIN"]);
   try {
+    const rawIssue = String(formData.get("hasIssue") || "");
+    if (rawIssue !== "yes" && rawIssue !== "no") {
+      throw new ServiceError("Report whether there is damage or an issue.");
+    }
     const result = await completePickupService({
       user,
       eventId: String(formData.get("eventId") || "") || null,
       rentalId: String(formData.get("rentalId") || ""),
       notes: String(formData.get("notes") || ""),
       conditionConfirmed: String(formData.get("conditionConfirmed") || "") === "on",
-      hasIssue: String(formData.get("hasIssue") || "") === "yes" ? "yes" : "no",
+      hasIssue: rawIssue,
       afterStatus: String(formData.get("afterStatus") || ""),
       photos: filesFromForm(formData),
     });
@@ -176,11 +109,49 @@ export async function assignScheduleEmployee(formData: FormData) {
     data: { employeeId },
   });
 
-  const event = await prisma.scheduleEvent.findUnique({ where: { id: eventId } });
+  const event = await prisma.scheduleEvent.findUnique({
+    where: { id: eventId },
+    include: { equipment: true, customer: true },
+  });
   revalidatePath("/admin/calendar");
   revalidatePath("/admin/dashboard");
+  revalidatePath("/admin/transports");
   revalidatePath("/employee/jobs");
   if (event?.equipmentId) revalidatePath(`/admin/equipment/${event.equipmentId}`);
   if (event?.employeeId) revalidatePath(`/admin/employees/${event.employeeId}`);
   redirect("/admin/calendar");
+}
+
+export async function requestCustomerPickup(formData: FormData) {
+  const user = await requireUser(["CUSTOMER", "ADMIN"]);
+  const rentalId = String(formData.get("rentalId") || "");
+  try {
+    await requestCustomerPickupService({
+      user,
+      rentalId,
+      pickupDate: String(formData.get("pickupDate") || ""),
+      pickupTime: String(formData.get("pickupTime") || ""),
+      pickupLocation: String(formData.get("pickupLocation") || ""),
+    });
+    redirect(`/customer/rentals/${rentalId}?requested=1`);
+  } catch (error) {
+    if (error instanceof ServiceError) {
+      redirect(`/customer/rentals/${rentalId}?error=${encodeURIComponent(error.message)}`);
+    }
+    throw error;
+  }
+}
+
+export async function confirmCustomerDelivery(formData: FormData) {
+  const user = await requireUser(["CUSTOMER", "ADMIN"]);
+  const rentalId = String(formData.get("rentalId") || "");
+  try {
+    await confirmCustomerDeliveryService({ user, rentalId });
+    redirect(`/customer/rentals/${rentalId}?confirmed=1`);
+  } catch (error) {
+    if (error instanceof ServiceError) {
+      redirect(`/customer/rentals/${rentalId}?error=${encodeURIComponent(error.message)}`);
+    }
+    throw error;
+  }
 }

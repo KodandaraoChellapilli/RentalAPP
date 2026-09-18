@@ -2,6 +2,7 @@ import Link from "next/link";
 import { StatusBadge } from "@/components/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { EVENT_TYPE_LABELS, type EventType } from "@/lib/constants";
+import { transportStatus } from "@/lib/transports";
 import { formatDateTime } from "@/lib/utils";
 
 export type JobRow = {
@@ -16,6 +17,7 @@ export type JobRow = {
   customerName: string | null;
   employeeName: string | null;
   rentalId: string | null;
+  source?: string | null;
 };
 
 export function JobsTable({
@@ -71,13 +73,10 @@ export function JobsTable({
                 <td>{job.destination || "—"}</td>
                 <td>{job.employeeName || "Unassigned"}</td>
                 <td>
-                  {job.completedAt ? (
-                    <span className="text-sm font-medium text-emerald-700">Done</span>
-                  ) : new Date(job.startAt) < new Date() ? (
-                    <span className="text-sm font-medium text-orange-700">Overdue</span>
-                  ) : (
-                    <StatusBadge kind="rental" status="SCHEDULED" />
-                  )}
+                  <StatusBadge kind="transport" status={transportStatus(job)} />
+                  {job.source === "CUSTOMER" && !job.completedAt ? (
+                    <p className="mt-1 text-xs text-stone-500">Customer requested pickup</p>
+                  ) : null}
                 </td>
                 <td>
                   <div className="flex flex-wrap gap-2">

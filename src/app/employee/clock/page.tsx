@@ -28,6 +28,7 @@ export default async function ClockPage({
       where: { employeeId: user.id, clockIn: { gte: weekStart } },
     }),
   ]);
+  const asOf = Date.now();
   const open = entries.find((entry) => !entry.clockOut);
   const todayStart = startOfToday();
   const todayMs = weekEntries
@@ -46,7 +47,7 @@ export default async function ClockPage({
           </p>
           <p className="mt-2 text-4xl font-semibold">
             {open ? (
-              <LiveDuration startAt={open.clockIn} running />
+              <LiveDuration startAt={open.clockIn} running asOf={asOf} />
             ) : (
               formatDuration(todayMs)
             )}
@@ -92,7 +93,7 @@ export default async function ClockPage({
                 </span>
               </span>
               <span className="font-medium">
-                <LiveDuration startAt={entry.clockIn} endAt={entry.clockOut} running={!entry.clockOut} />
+                <LiveDuration startAt={entry.clockIn} endAt={entry.clockOut} running={!entry.clockOut} asOf={asOf} />
               </span>
             </div>
           ))

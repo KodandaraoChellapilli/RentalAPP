@@ -9,9 +9,15 @@ export type SessionUser = {
 };
 
 export const SESSION_COOKIE = "rental_session";
+/** Signed session lifetime (cookie maxAge and bearer tokens share this). */
+export const SESSION_TTL_MS = 60 * 60 * 24 * 14;
 
 function secret() {
-  return process.env.AUTH_SECRET || "rental-app-dev-secret-change-me";
+  const value = process.env.AUTH_SECRET;
+  if (process.env.NODE_ENV === "production" && (!value || value === "rental-app-dev-secret-change-me")) {
+    throw new Error("AUTH_SECRET must be set to a strong value in production.");
+  }
+  return value || "rental-app-dev-secret-change-me";
 }
 
 function bytesToHex(bytes: ArrayBuffer | Uint8Array) {
@@ -56,8 +62,11 @@ async function sign(value: string) {
   return bytesToHex(signature);
 }
 
+type SessionPayload = SessionUser & { exp?: number };
+
 export async function encodeSession(user: SessionUser) {
-  const payload = toBase64Url(JSON.stringify(user));
+  const body: SessionPayload = { ...user, exp: Date.now() + SESSION_TTL_MS };
+  const payload = toBase64Url(JSON.stringify(body));
   return `${payload}.${await sign(payload)}`;
 }
 
@@ -68,9 +77,16 @@ export async function decodeSession(token: string | undefined | null): Promise<S
   const expected = await sign(payload);
   if (!timingSafeEqual(expected, sig)) return null;
   try {
-    const user = JSON.parse(fromBase64Url(payload)) as SessionUser;
-    if (!user?.id || !isRole(user.role)) return null;
-    return user;
+    const parsed = JSON.parse(fromBase64Url(payload)) as SessionPayload;
+    if (!parsed?.id || !isRole(parsed.role)) return null;
+    if (typeof parsed.exp === "number" && parsed.exp < Date.now()) return null;
+    return {
+      id: parsed.id,
+      email: parsed.email,
+      name: parsed.name,
+      role: parsed.role,
+      customerId: parsed.customerId,
+    };
   } catch {
     return null;
   }

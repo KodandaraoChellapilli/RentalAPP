@@ -1,6 +1,6 @@
 import { Platform, StyleSheet, type ViewStyle } from "react-native";
 
-/** Ridgeline Rentals design tokens — aligned with admin-ui / website palette. */
+/** West Ridge Rentals design tokens — aligned with the website palette. */
 export const colors = {
   ink: "#14110e",
   bg: "#f3eee6",
@@ -78,6 +78,7 @@ export function statusLabel(status: string) {
     ACTIVE: "Active",
     COMPLETED: "Completed",
     CANCELLED: "Cancelled",
+    NEEDS_TRANSPORT: "Needs transport",
     DELIVERY: "Delivery",
     PICKUP: "Pickup",
   };

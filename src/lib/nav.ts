@@ -1,12 +1,10 @@
 import {
-  Camera,
   BarChart3,
   CalendarDays,
   Clock3,
   HardHat,
   LayoutDashboard,
   Package,
-  PackageCheck,
   Settings,
   Truck,
   Users,
@@ -14,6 +12,7 @@ import {
   Wrench,
   type LucideIcon,
 } from "lucide-react";
+import { COMPANY_NAME } from "@/lib/brand";
 import type { Role } from "@/lib/constants";
 
 export type NavItem = { href: string; label: string; icon: LucideIcon };
@@ -26,10 +25,7 @@ export const ADMIN_NAV: NavGroup[] = [
       { href: "/admin/rentals", label: "Rentals", icon: Package },
       { href: "/admin/equipment", label: "Equipment", icon: Wrench },
       { href: "/admin/calendar", label: "Calendar", icon: CalendarDays },
-      { href: "/admin/deliveries", label: "Deliveries", icon: Truck },
-      { href: "/admin/pickups", label: "Pickups", icon: PackageCheck },
-      { href: "/employee/deliver", label: "Record delivery", icon: Camera },
-      { href: "/employee/pickup", label: "Record pickup", icon: Camera },
+      { href: "/admin/transports", label: "Transports", icon: Truck },
     ],
   },
   {
@@ -53,9 +49,7 @@ export const EMPLOYEE_NAV: NavGroup[] = [
   {
     links: [
       { href: "/employee/clock", label: "Time Clock", icon: Clock3 },
-      { href: "/employee/jobs", label: "Today's Jobs", icon: CalendarDays },
-      { href: "/employee/deliver", label: "Deliveries", icon: Truck },
-      { href: "/employee/pickup", label: "Pickups", icon: PackageCheck },
+      { href: "/employee/jobs", label: "Transports", icon: Truck },
       { href: "/employee/equipment", label: "Equipment", icon: Wrench },
       { href: "/account", label: "Settings", icon: Settings },
     ],
@@ -78,6 +72,7 @@ const PAGE_TITLES: Array<{ match: string; title: string }> = [
   { match: "/admin/rentals", title: "Rentals" },
   { match: "/admin/calendar", title: "Calendar" },
   { match: "/admin/schedule/new", title: "New Schedule" },
+  { match: "/admin/transports", title: "Transports" },
   { match: "/admin/deliveries", title: "Deliveries" },
   { match: "/admin/pickups", title: "Pickups" },
   { match: "/admin/customers/new", title: "Add Customer" },
@@ -87,7 +82,7 @@ const PAGE_TITLES: Array<{ match: string; title: string }> = [
   { match: "/admin/hours", title: "Time Clock" },
   { match: "/admin/reports", title: "Reports" },
   { match: "/employee/clock", title: "Time Clock" },
-  { match: "/employee/jobs", title: "Today's Jobs" },
+  { match: "/employee/jobs", title: "Transports" },
   { match: "/employee/deliver", title: "Record delivery" },
   { match: "/employee/pickup", title: "Record pickup" },
   { match: "/employee/equipment", title: "Equipment" },
@@ -109,7 +104,7 @@ export function navLinksFor(role: Role, options?: { includeSettings?: boolean })
 
 export function pageTitleFor(pathname: string) {
   const found = PAGE_TITLES.find((item) => pathname === item.match || pathname.startsWith(`${item.match}/`));
-  return found?.title || "Ridgeline Rentals";
+  return found?.title || COMPANY_NAME;
 }
 
 export function roleLabelFor(role: Role) {
@@ -121,6 +116,13 @@ export function roleLabelFor(role: Role) {
 export function isNavActive(pathname: string, href: string) {
   if (pathname === href) return true;
   if (href === "/account") return pathname === "/account" || pathname.startsWith("/account/");
+  if (href === "/admin/transports") {
+    return (
+      pathname.startsWith("/admin/transports") ||
+      pathname.startsWith("/admin/deliveries") ||
+      pathname.startsWith("/admin/pickups")
+    );
+  }
   return pathname.startsWith(`${href}/`);
 }
 

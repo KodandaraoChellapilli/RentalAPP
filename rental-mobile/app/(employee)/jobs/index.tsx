@@ -22,12 +22,12 @@ export default function JobsScreen() {
     <Screen onRefresh={load} refreshing={refreshing}>
       <Title
         kicker="Field work"
-        title="Assigned work"
-        subtitle="Open a delivery or pickup. Photos, notes, and a condition confirm are required before you can complete the job."
+        title="Transports"
+        subtitle="Open an assigned delivery or pickup. Photos, notes, and a condition confirm are required before you can complete the job."
       />
       <ErrorText message={error} />
       {!jobs?.length ? (
-        <Empty title="No open assignments" body="When the owner assigns you a delivery or pickup, it will show here." />
+        <Empty title="No open transports" body="When the owner assigns you a delivery or pickup, it will show here." />
       ) : (
         jobs.map((job) => (
           <JobCard

@@ -1,5 +1,6 @@
 import { formatDuration, formatMoney, formatRate, rentalCharge } from "@/lib/billing";
 import { photoLabelFor } from "@/lib/photo-labels";
+import { transportStatus, transportStatusLabel } from "@/lib/transports";
 
 export function iso(value: Date | string | null | undefined) {
   if (!value) return null;
@@ -130,12 +131,18 @@ export function eventJson(
     destination?: string | null;
     notes?: string | null;
     rentalId?: string | null;
+    employeeId?: string | null;
+    source?: string | null;
+    customerConfirmedAt?: Date | string | null;
     equipment?: Parameters<typeof equipmentSummary>[0] | null;
     customer?: { id: string; name: string; email?: string | null; phone?: string | null } | null;
     employee?: { id: string; name: string } | null;
     rental?: Parameters<typeof rentalJson>[0] | null;
   },
 ) {
+  const status = transportStatus(event);
+  const customerRequested =
+    event.source === "CUSTOMER" || Boolean(event.notes?.includes("Customer requested pickup"));
   return {
     id: event.id,
     type: event.type,
@@ -145,11 +152,53 @@ export function eventJson(
     destination: event.destination || null,
     notes: event.notes || null,
     rentalId: event.rentalId || null,
+    source: customerRequested ? "CUSTOMER" : event.source || "STAFF",
+    customerConfirmedAt: iso(event.customerConfirmedAt),
+    status,
+    statusLabel: transportStatusLabel(status),
     equipment: event.equipment ? equipmentSummary(event.equipment) : null,
     customer: personSummary(event.customer),
     employee: event.employee ? { id: event.employee.id, name: event.employee.name } : null,
     rental: event.rental ? rentalJson(event.rental) : null,
   };
+}
+
+export function rentalHistoryJson(
+  rental: Parameters<typeof rentalJson>[0] & {
+    photos?: Parameters<typeof photoJson>[0][];
+    events?: Array<{
+      id: string;
+      type: string;
+      startAt: Date | string;
+      completedAt?: Date | string | null;
+      notes?: string | null;
+      employee?: { name: string } | null;
+    }>;
+  },
+  origin: string,
+) {
+  const photos = rental.photos || [];
+  const events = rental.events || [];
+  const before = photos.filter((photo) => photo.type === "DELIVERY");
+  const after = photos.filter((photo) => photo.type === "PICKUP");
+  const delivery = events.find((event) => event.type === "DELIVERY");
+  const pickup = events.find((event) => event.type === "PICKUP");
+  return rentalJson(rental, {
+    deliveredBy: delivery?.employee?.name || before[0]?.uploadedBy?.name || null,
+    pickedUpBy: pickup?.employee?.name || after[0]?.uploadedBy?.name || null,
+    conditionNotes: rental.notes || null,
+    beforePhotos: before.map((photo) => photoJson(photo, origin)),
+    afterPhotos: after.map((photo) => photoJson(photo, origin)),
+    photos: photos.map((photo) => photoJson(photo, origin)),
+    events: events.map((event) => ({
+      id: event.id,
+      type: event.type,
+      startAt: iso(event.startAt),
+      completedAt: iso(event.completedAt),
+      employeeName: event.employee?.name || null,
+      notes: event.notes || null,
+    })),
+  });
 }
 
 export function timeEntryJson(entry: {

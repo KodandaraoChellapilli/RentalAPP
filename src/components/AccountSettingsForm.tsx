@@ -8,11 +8,13 @@ import { SubmitButton } from "@/components/ui/SubmitButton";
 export function AccountSettingsForm({
   name,
   email,
+  roleLabel = "Owner",
   error,
   updated,
 }: {
   name: string;
   email: string;
+  roleLabel?: string;
   error?: string;
   updated?: boolean;
 }) {
@@ -39,7 +41,7 @@ export function AccountSettingsForm({
   return (
     <div className="mx-auto w-full max-w-2xl space-y-6">
       <div className="card p-6">
-        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-stone-500">Profile</p>
+        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-stone-500">{roleLabel}</p>
         <h2 className="mt-2 text-xl font-semibold">{name}</h2>
         <p className="mt-1 text-sm text-stone-500">{email}</p>
       </div>

@@ -14,10 +14,14 @@ export function JobCard({ job, onOpen }: { job: Job; onOpen: () => void }) {
       accessibilityLabel={pickup ? "Open pickup inspection" : "Open delivery inspection"}
     >
       <Badge status={job.type} />
+      {job.statusLabel ? <Text style={cardStyles.cardMeta}>{job.statusLabel}</Text> : null}
       <Text style={cardStyles.cardTitle}>{job.equipment?.label || job.title}</Text>
       <Text style={cardStyles.cardMeta}>{job.customer?.name}</Text>
       <Text style={cardStyles.cardMeta}>{job.destination || "No destination yet"}</Text>
       <Text style={cardStyles.cardMeta}>{formatWhen(job.startAt)}</Text>
+      {job.source === "CUSTOMER" ? (
+        <Text style={cardStyles.cardMeta}>Customer requested pickup</Text>
+      ) : null}
       <Text style={cardStyles.cardCta}>{pickup ? "Open pickup" : "Open delivery"} →</Text>
     </StripeCard>
   );

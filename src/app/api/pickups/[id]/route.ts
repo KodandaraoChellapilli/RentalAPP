@@ -5,6 +5,7 @@ import { eventJson, photoJson, rentalJson } from "@/lib/api/serialize";
 import { photoInclude } from "@/lib/photos";
 import { prisma } from "@/lib/prisma";
 import { ServiceError } from "@/lib/services/errors";
+import { assertStaffCanWorkRental } from "@/lib/services/rentals";
 
 export function OPTIONS() {
   return options();
@@ -54,6 +55,8 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
       },
     });
     if (!rental || rental.status !== "ACTIVE") throw new ServiceError("Pickup not found.", 404);
+    await assertStaffCanWorkRental(user, rental.id, null, "PICKUP");
+
     return json({
       job: null,
       rental: rentalJson(rental, {

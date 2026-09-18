@@ -27,3 +27,10 @@ export function canAccessEvent(user: SessionUser, employeeId?: string | null) {
   if (user.role === "ADMIN") return true;
   return user.role === "EMPLOYEE" && employeeId === user.id;
 }
+
+/** Employees may only work jobs assigned to them. Admins may work any job. */
+export function assertCanAccessEvent(user: SessionUser, employeeId?: string | null) {
+  if (!canAccessEvent(user, employeeId)) {
+    throw new ServiceError("You do not have access.", 403);
+  }
+}

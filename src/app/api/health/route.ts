@@ -5,5 +5,5 @@ export function OPTIONS() {
 }
 
 export async function GET() {
-  return json({ ok: true, name: "Ridgeline Rentals" });
+  return json({ ok: true, name: "West Ridge Rentals" });
 }

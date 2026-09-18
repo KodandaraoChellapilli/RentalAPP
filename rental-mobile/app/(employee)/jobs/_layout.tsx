@@ -9,13 +9,13 @@ export default function JobsLayout() {
         headerStyle: { backgroundColor: colors.ink },
         headerTintColor: colors.white,
         headerTitleStyle: { fontWeight: "700" },
-        headerBackTitle: "Jobs",
+        headerBackTitle: "Transports",
         contentStyle: { backgroundColor: colors.bg, flex: 1 },
       }}
     >
       <Stack.Screen
         name="index"
-        options={{ title: "Today's jobs", headerRight: () => <SignOutButton /> }}
+        options={{ title: "Transports", headerRight: () => <SignOutButton /> }}
       />
       <Stack.Screen name="deliver/[id]" options={{ title: "Delivery" }} />
       <Stack.Screen name="pickup/[id]" options={{ title: "Pickup" }} />

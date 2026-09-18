@@ -69,6 +69,14 @@ export type Rental = {
   customer: Person | null;
   photos?: Photo[];
   beforePhotos?: Photo[];
+  afterPhotos?: Photo[];
+  deliveredBy?: string | null;
+  pickedUpBy?: string | null;
+  conditionNotes?: string | null;
+  delivery?: Job | null;
+  pickupRequest?: Job | null;
+  canConfirmDelivery?: boolean;
+  canRequestPickup?: boolean;
 };
 
 export type Job = {
@@ -80,6 +88,10 @@ export type Job = {
   destination: string | null;
   notes: string | null;
   rentalId: string | null;
+  source?: string | null;
+  status?: string | null;
+  statusLabel?: string | null;
+  customerConfirmedAt?: string | null;
   equipment: Equipment | null;
   customer: Person | null;
   employee: { id: string; name: string } | null;

@@ -27,7 +27,15 @@ export type RentalRow = {
   pickupLabel: string;
 };
 
-export function RentalsTable({ items, initialStatus = "all" }: { items: RentalRow[]; initialStatus?: string }) {
+export function RentalsTable({
+  items,
+  initialStatus = "all",
+  asOf,
+}: {
+  items: RentalRow[];
+  initialStatus?: string;
+  asOf?: number | string | Date | null;
+}) {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState(initialStatus);
   const [page, setPage] = useState(1);
@@ -123,6 +131,7 @@ export function RentalsTable({ items, initialStatus = "all" }: { items: RentalRo
                   rental.unit,
                   rental.status,
                   rental.finalAmount,
+                  asOf ?? rental.startAt,
                 );
                 return (
                   <tr key={rental.id}>
@@ -141,6 +150,7 @@ export function RentalsTable({ items, initialStatus = "all" }: { items: RentalRo
                     <td>
                       <LiveCharge
                         compact
+                        asOf={asOf ?? rental.startAt}
                         startAt={rental.startAt}
                         endAt={rental.endAt}
                         rate={rental.rate}

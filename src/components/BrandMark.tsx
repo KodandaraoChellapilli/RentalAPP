@@ -33,7 +33,7 @@ export function BrandWordmark({ inverted = false }: { inverted?: boolean }) {
             inverted ? "text-amber-400" : "text-orange-700"
           }`}
         >
-          Ridgeline
+          West Ridge
         </p>
         <p className={`text-lg font-semibold leading-none ${inverted ? "text-white" : "text-stone-900"}`}>
           Rentals

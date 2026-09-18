@@ -1,8 +1,10 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { homeFor, type Role } from "@/lib/constants";
+import { hydrateSessionUser } from "@/lib/hydrate-session";
 import {
   SESSION_COOKIE,
+  SESSION_TTL_MS,
   decodeSession,
   encodeSession,
   type SessionUser,
@@ -17,7 +19,7 @@ export async function setSession(user: SessionUser) {
     sameSite: "lax",
     path: "/",
     secure: process.env.NODE_ENV === "production",
-    maxAge: 60 * 60 * 24 * 14,
+    maxAge: Math.floor(SESSION_TTL_MS / 1000),
   });
 }
 
@@ -28,7 +30,7 @@ export async function clearSession() {
 
 export async function getSession(): Promise<SessionUser | null> {
   const jar = await cookies();
-  return decodeSession(jar.get(SESSION_COOKIE)?.value);
+  return hydrateSessionUser(await decodeSession(jar.get(SESSION_COOKIE)?.value));
 }
 
 export async function requireUser(roles?: Role[]) {

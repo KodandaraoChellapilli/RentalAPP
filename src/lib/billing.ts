@@ -53,6 +53,7 @@ export function rentalCharge(
   unit: BillingUnit | string,
   status: string,
   finalAmount?: number | null,
+  asOf?: Date | string | number | null,
 ) {
   if (status === "COMPLETED" && finalAmount != null) {
     const durationMs =
@@ -76,7 +77,12 @@ export function rentalCharge(
     };
   }
 
-  const end = endAt && status !== "ACTIVE" ? new Date(endAt) : new Date();
+  const end =
+    status === "ACTIVE"
+      ? new Date(asOf ?? Date.now())
+      : endAt
+        ? new Date(endAt)
+        : new Date(asOf ?? Date.now());
   return { ...calculateCharge(startAt, end, rate, unit), isEstimate: status === "ACTIVE" };
 }
 

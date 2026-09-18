@@ -13,7 +13,7 @@ export default async function LoginPage({
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 lg:min-h-[calc(100dvh-4rem)] lg:flex-row lg:items-center lg:justify-between lg:gap-16">
         <div className="max-w-lg shrink-0">
           <BrandMark className="h-14 w-14" />
-          <p className="mt-6 text-xs font-semibold uppercase tracking-[0.28em] text-amber-400">Ridgeline Rentals</p>
+          <p className="mt-6 text-xs font-semibold uppercase tracking-[0.28em] text-amber-400">West Ridge Rentals</p>
           <h1 className="mt-3 text-4xl font-semibold leading-tight lg:text-5xl">Yard operations, in one place.</h1>
           <p className="mt-4 text-stone-400">
             Clock time, deliver and pick up machines with photo records, track live rental charges, and give
@@ -30,7 +30,7 @@ export default async function LoginPage({
             <LoginForm error={error} reason={reason} nextPath={next} />
           </div>
           <p className="px-8 pb-5 text-center text-xs text-stone-400">
-            Ridgeline Rentals &copy; {new Date().getFullYear()}
+            West Ridge Rentals &copy; {new Date().getFullYear()}
           </p>
         </div>
       </div>

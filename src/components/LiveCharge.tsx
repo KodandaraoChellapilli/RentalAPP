@@ -11,6 +11,7 @@ export function LiveCharge({
   status,
   finalAmount,
   compact = false,
+  asOf,
 }: {
   startAt: Date | string | null;
   endAt?: Date | string | null;
@@ -19,16 +20,27 @@ export function LiveCharge({
   status: string;
   finalAmount?: number | null;
   compact?: boolean;
+  asOf?: Date | string | number | null;
 }) {
-  const [now, setNow] = useState(() => Date.now());
+  const seed = asOf != null ? new Date(asOf).getTime() : null;
+  const [now, setNow] = useState<number | null>(seed);
 
   useEffect(() => {
+    setNow(Date.now());
     if (status !== "ACTIVE") return;
     const id = setInterval(() => setNow(Date.now()), 15000);
     return () => clearInterval(id);
   }, [status]);
 
-  const charge = rentalCharge(startAt, status === "ACTIVE" ? new Date(now) : endAt || null, rate, unit, status, finalAmount);
+  const charge = rentalCharge(
+    startAt,
+    endAt || null,
+    rate,
+    unit,
+    status,
+    finalAmount,
+    now ?? startAt,
+  );
 
   if (compact) {
     return (

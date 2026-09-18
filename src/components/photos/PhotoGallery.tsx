@@ -31,8 +31,10 @@ export function PhotoCard({ photo }: { photo: PhotoView }) {
 
   return (
     <figure className="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={photo.path} alt={`${eventLabel} documentation`} className="h-52 w-full bg-stone-100 object-cover" />
+      <a href={photo.path} target="_blank" rel="noreferrer">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={photo.path} alt={`${eventLabel} documentation`} className="h-52 w-full bg-stone-100 object-cover" />
+      </a>
       <figcaption className="space-y-1 px-4 py-3 text-sm text-stone-600">
         <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-orange-700">{eventLabel}</p>
         <p className="font-medium text-stone-800">{formatDateTime(photo.takenAt)}</p>

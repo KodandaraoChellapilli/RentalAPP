@@ -2,20 +2,56 @@ export function cn(...inputs: Array<string | false | null | undefined>) {
   return inputs.filter(Boolean).join(" ");
 }
 
+/** Keep SSR and the browser on the same clock/locale so hydrated dates match. */
+export const DISPLAY_TIMEZONE = "America/Denver";
+
+function pad2(n: number) {
+  return String(n).padStart(2, "0");
+}
+
+export function calendarDayKey(value: Date | string) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: DISPLAY_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date(value));
+  const year = parts.find((part) => part.type === "year")?.value;
+  const month = parts.find((part) => part.type === "month")?.value;
+  const day = parts.find((part) => part.type === "day")?.value;
+  return `${year}-${month}-${day}`;
+}
+
+export function localDayKey(value: Date) {
+  return `${value.getFullYear()}-${pad2(value.getMonth() + 1)}-${pad2(value.getDate())}`;
+}
+
+export function formatTime(value: Date | string) {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: DISPLAY_TIMEZONE,
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }).format(new Date(value));
+}
+
 export function formatDateTime(value: Date | string | null | undefined) {
   if (!value) return "—";
   return new Intl.DateTimeFormat("en-US", {
+    timeZone: DISPLAY_TIMEZONE,
     month: "short",
     day: "numeric",
     year: "numeric",
     hour: "numeric",
     minute: "2-digit",
+    hour12: true,
   }).format(new Date(value));
 }
 
 export function formatDate(value: Date | string | null | undefined) {
   if (!value) return "—";
   return new Intl.DateTimeFormat("en-US", {
+    timeZone: DISPLAY_TIMEZONE,
     month: "short",
     day: "numeric",
     year: "numeric",

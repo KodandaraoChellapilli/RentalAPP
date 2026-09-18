@@ -76,7 +76,7 @@ export function AppSidebar({
         <Link href={homeHrefFor(role)} className="flex items-center gap-3">
           <BrandMark className="h-10 w-10" />
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-orange-700">Ridgeline</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-orange-700">West Ridge</p>
             <p className="text-lg font-semibold leading-none text-stone-900">Rentals</p>
           </div>
         </Link>

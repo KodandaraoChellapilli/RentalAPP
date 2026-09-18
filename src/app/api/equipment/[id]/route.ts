@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { requireStaff } from "@/lib/api/access";
 import { fail, json, options, publicOrigin, requireApiUser } from "@/lib/api/http";
-import { equipmentSummary, eventJson, photoJson, rentalJson } from "@/lib/api/serialize";
+import { equipmentSummary, eventJson, photoJson, rentalHistoryJson, rentalJson } from "@/lib/api/serialize";
 import { photoInclude } from "@/lib/photos";
 import { prisma } from "@/lib/prisma";
 import { ServiceError } from "@/lib/services/errors";
@@ -47,17 +47,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     return json({
       equipment: equipmentSummary(equipment),
       currentRental: current ? rentalJson(current) : null,
-      history: equipment.rentals.map((rental) =>
-        rentalJson(rental, {
-          photos: rental.photos.map((photo) => photoJson(photo, origin)),
-          events: rental.events.map((event) => ({
-            id: event.id,
-            type: event.type,
-            startAt: event.startAt,
-            employeeName: event.employee?.name || null,
-          })),
-        }),
-      ),
+      history: equipment.rentals.map((rental) => rentalHistoryJson(rental, origin)),
       photos: equipment.photos.map((photo) => photoJson(photo, origin)),
       events: equipment.events.map(eventJson),
     });

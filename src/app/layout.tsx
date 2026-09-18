@@ -8,7 +8,7 @@ const display = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Ridgeline Rentals",
+  title: "West Ridge Rentals",
   description: "Equipment rental operations for employees, owners, and customers.",
 };
 

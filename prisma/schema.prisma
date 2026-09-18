@@ -86,19 +86,21 @@ model TimeEntry {
 }
 
 model ScheduleEvent {
-  id          String    @id @default(cuid())
-  type        String
-  title       String?
-  startAt     DateTime
-  endAt       DateTime?
-  equipmentId String?
-  customerId  String?
-  employeeId  String?
-  rentalId    String?
-  notes       String?
-  destination String?
-  completedAt DateTime?
-  createdAt   DateTime  @default(now())
+  id                   String    @id @default(cuid())
+  type                 String
+  title                String?
+  startAt              DateTime
+  endAt                DateTime?
+  equipmentId          String?
+  customerId           String?
+  employeeId           String?
+  rentalId             String?
+  notes                String?
+  destination          String?
+  completedAt          DateTime?
+  source               String    @default("STAFF")
+  customerConfirmedAt  DateTime?
+  createdAt            DateTime  @default(now())
 
   equipment Equipment? @relation(fields: [equipmentId], references: [id])
   customer  Customer?  @relation(fields: [customerId], references: [id])

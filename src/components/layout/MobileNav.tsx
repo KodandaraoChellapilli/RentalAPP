@@ -29,7 +29,7 @@ export function MobileDrawer({
         <div className="flex items-center justify-between border-b border-stone-200 px-4 py-4">
           <Link href={homeHrefFor(role)} className="flex items-center gap-3" onClick={onClose}>
             <BrandMark className="h-9 w-9" compact />
-            <span className="font-semibold">Ridgeline Rentals</span>
+            <span className="font-semibold">West Ridge Rentals</span>
           </Link>
           <button type="button" className="rounded-xl p-2 hover:bg-stone-100" onClick={onClose} aria-label="Close navigation">
             <X className="h-5 w-5" />

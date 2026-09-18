@@ -36,7 +36,7 @@ export default function OwnerDashboard() {
   return (
     <Screen onRefresh={load} refreshing={refreshing}>
       <Title
-        kicker="Ridgeline Rentals"
+        kicker="West Ridge Rentals"
         title={welcomeTitle(user?.name, "Yard overview")}
         subtitle="Live rentals, crew on shift, and machines that need attention. Charges use the same billing rules as the website."
       />

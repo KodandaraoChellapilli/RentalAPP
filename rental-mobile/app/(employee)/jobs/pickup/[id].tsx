@@ -27,7 +27,7 @@ export default function PickupScreen() {
   const [rental, setRental] = useState<(Rental & { beforePhotos?: Photo[] }) | null>(null);
   const [notes, setNotes] = useState("");
   const [confirmed, setConfirmed] = useState(false);
-  const [hasIssue, setHasIssue] = useState(false);
+  const [hasIssue, setHasIssue] = useState<boolean | null>(null);
   const [afterStatus, setAfterStatus] = useState("AVAILABLE");
   const [photos, setPhotos] = useState<LocalPhoto[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -61,18 +61,19 @@ export default function PickupScreen() {
     }, [load]),
   );
 
-  const nextStatus = hasIssue ? (afterStatus === "OUT_OF_SERVICE" ? "OUT_OF_SERVICE" : "MAINTENANCE") : afterStatus;
+  const nextStatus =
+    hasIssue === true ? (afterStatus === "OUT_OF_SERVICE" ? "OUT_OF_SERVICE" : "MAINTENANCE") : afterStatus;
   const checks = useMemo(
     () => [
       { label: "Return condition notes (3+ characters)", done: notes.trim().length >= 3 },
       { label: "Condition confirmed", done: confirmed },
       { label: "At least 1 after photo", done: photos.length > 0 },
-      { label: "Damage question answered", done: true },
+      { label: "Damage question answered", done: hasIssue !== null },
     ],
-    [notes, confirmed, photos.length],
+    [notes, confirmed, photos.length, hasIssue],
   );
   const ready = Boolean(rental?.id) && checks.every((item) => item.done);
-  const step = !rental ? 0 : ready ? 3 : photos.length > 0 ? 2 : hasIssue ? 1 : 0;
+  const step = !rental ? 0 : ready ? 3 : photos.length > 0 ? 2 : hasIssue === true ? 1 : 0;
 
   async function complete() {
     if (!ready || !rental) return;
@@ -83,8 +84,8 @@ export default function PickupScreen() {
       form.append("rentalId", rental.id);
       form.append("notes", notes.trim());
       form.append("conditionConfirmed", "true");
-      form.append("hasIssue", hasIssue ? "yes" : "no");
-      form.append("afterStatus", hasIssue && nextStatus === "AVAILABLE" ? "MAINTENANCE" : nextStatus);
+      form.append("hasIssue", hasIssue === true ? "yes" : "no");
+      form.append("afterStatus", hasIssue === true && nextStatus === "AVAILABLE" ? "MAINTENANCE" : nextStatus);
       appendPhotos(form, photos);
       await api(`/api/pickups/${id}/complete`, { method: "POST", body: form });
       successFeedback();
@@ -102,9 +103,10 @@ export default function PickupScreen() {
   if (loading && !rental && !error) return <Loading />;
 
   if (done) {
-    const statusNote = hasIssue
-      ? `This machine is marked ${nextStatus === "OUT_OF_SERVICE" ? "Out of service" : "Maintenance"}, not Available.`
-      : "After photos are stored and the final rental amount has been calculated.";
+    const statusNote =
+      hasIssue === true
+        ? `This machine is marked ${nextStatus === "OUT_OF_SERVICE" ? "Out of service" : "Maintenance"}, not Available.`
+        : "After photos are stored and the final rental amount has been calculated.";
     return (
       <Screen>
         <SuccessState
@@ -172,7 +174,7 @@ export default function PickupScreen() {
         <Checklist items={checks} />
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
           <Text style={{ fontWeight: "700", color: colors.ink }}>Damage or issue?</Text>
-          {hasIssue ? (
+          {hasIssue === true ? (
             <Pressable onPress={() => setDamageOpen(true)} hitSlop={8}>
               <Text style={{ color: colors.accent, fontWeight: "700" }}>Change status</Text>
             </Pressable>
@@ -181,7 +183,7 @@ export default function PickupScreen() {
         <ChoiceRow>
           <Choice
             label="No"
-            selected={!hasIssue}
+            selected={hasIssue === false}
             onPress={() => {
               setHasIssue(false);
               setAfterStatus("AVAILABLE");
@@ -189,7 +191,7 @@ export default function PickupScreen() {
           />
           <Choice
             label="Yes"
-            selected={hasIssue}
+            selected={hasIssue === true}
             onPress={() => {
               setHasIssue(true);
               setAfterStatus(afterStatus === "OUT_OF_SERVICE" ? "OUT_OF_SERVICE" : "MAINTENANCE");
@@ -197,7 +199,7 @@ export default function PickupScreen() {
             }}
           />
         </ChoiceRow>
-        {hasIssue ? (
+        {hasIssue === true ? (
           <Text style={{ color: colors.warning, fontWeight: "700", marginBottom: 12 }}>
             Machine will be {nextStatus === "OUT_OF_SERVICE" ? "Out of service" : "Maintenance"} — not Available.
           </Text>
@@ -245,7 +247,7 @@ export default function PickupScreen() {
         visible={confirmOpen}
         title="Complete this pickup?"
         body={
-          hasIssue
+          hasIssue === true
             ? `After photos will be stored and this machine will be marked ${nextStatus === "OUT_OF_SERVICE" ? "Out of service" : "Maintenance"}. The final rental amount will be calculated.`
             : "After photos will be stored and the final rental amount will be calculated."
         }

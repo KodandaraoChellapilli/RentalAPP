@@ -7,6 +7,7 @@ export function revalidateRentalSurfaces(equipmentId?: string, rentalId?: string
   revalidatePath("/admin/deliveries");
   revalidatePath("/admin/pickups");
   revalidatePath("/admin/reports");
+  revalidatePath("/admin/transports");
   revalidatePath("/employee/jobs");
   revalidatePath("/employee/deliver");
   revalidatePath("/employee/pickup");

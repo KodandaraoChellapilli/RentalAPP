@@ -9,10 +9,30 @@ export default async function PickupPage({
 }: {
   searchParams: Promise<{ eventId?: string; rentalId?: string; error?: string }>;
 }) {
-  await requireUser(["EMPLOYEE", "ADMIN"]);
+  const user = await requireUser(["EMPLOYEE", "ADMIN"]);
   const { eventId, rentalId, error } = await searchParams;
+
+  const assignedRentalIds =
+    user.role === "EMPLOYEE"
+      ? (
+          await prisma.scheduleEvent.findMany({
+            where: {
+              employeeId: user.id,
+              rentalId: { not: null },
+              OR: [{ type: "PICKUP", completedAt: null }, { type: "DELIVERY" }],
+            },
+            select: { rentalId: true },
+          })
+        )
+          .map((event) => event.rentalId)
+          .filter((id): id is string => Boolean(id))
+      : null;
+
   const rentals = await prisma.rental.findMany({
-    where: { status: "ACTIVE" },
+    where: {
+      status: "ACTIVE",
+      ...(assignedRentalIds ? { id: { in: assignedRentalIds } } : {}),
+    },
     include: {
       equipment: true,
       customer: true,
@@ -25,7 +45,7 @@ export default async function PickupPage({
     <div className="mx-auto max-w-2xl">
       <PageHeader
         title="Pickup inspection"
-        subtitle="Photograph the equipment after it returns. Pickup cannot be completed without after photos, condition notes, a damage report, and confirmation."
+        subtitle="Photograph the equipment after it returns. Pickup needs after photos, condition notes, a damage answer, and confirmation."
       />
       <ErrorBanner message={error} />
       <PickupForm

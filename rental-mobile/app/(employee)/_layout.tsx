@@ -22,7 +22,7 @@ export default function EmployeeLayout() {
       <Tabs.Screen
         name="jobs"
         options={{
-          title: "Jobs",
+          title: "Transports",
           headerShown: false,
           tabBarIcon: tabIcon("briefcase-outline"),
         }}

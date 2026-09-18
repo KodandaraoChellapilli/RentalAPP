@@ -25,7 +25,7 @@ export default async function JobsPage({
 
   return (
     <div>
-      <PageHeader title="Today's jobs" subtitle="Assigned deliveries and pickups. Completing a job updates the rental and equipment status." />
+      <PageHeader title="Transports" subtitle="Assigned deliveries and pickups. Completing a job updates the rental and equipment status." />
       <ErrorBanner message={error} />
       {done === "delivery" ? (
         <Alert variant="success" className="mb-4">
@@ -38,7 +38,7 @@ export default async function JobsPage({
         </Alert>
       ) : null}
       {jobs.length === 0 ? (
-        <EmptyState title="No open assignments" body="You can still start a delivery or pickup from the menu when a job comes in." />
+        <EmptyState title="No open transports" body="When the owner assigns you a delivery or pickup, it will show here." />
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
           {jobs.map((job) => (

@@ -42,7 +42,7 @@ export function RentalCard({
       <p className="text-sm text-stone-600">Scheduled pickup {formatDateTime(expectedPickupAt)}</p>
       <p className="text-sm text-stone-600">{formatRate(rate, unit)}</p>
       <div className="mt-4">
-        <LiveCharge startAt={startAt} rate={rate} unit={unit} status={status} finalAmount={finalAmount} />
+        <LiveCharge asOf={Date.now()} startAt={startAt} rate={rate} unit={unit} status={status} finalAmount={finalAmount} />
       </div>
     </>
   );
@@ -79,7 +79,7 @@ export function RentalHistoryRow({
           {formatDateTime(startAt)} → {formatDateTime(endAt)}
         </p>
       </div>
-      <LiveCharge compact startAt={startAt} endAt={endAt} rate={rate} unit={unit} status={status} finalAmount={finalAmount} />
+      <LiveCharge compact asOf={Date.now()} startAt={startAt} endAt={endAt} rate={rate} unit={unit} status={status} finalAmount={finalAmount} />
     </>
   );
 

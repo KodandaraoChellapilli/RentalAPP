@@ -32,6 +32,7 @@ export default async function AdminDeliveriesPage() {
           customerName: event.customer?.name ?? null,
           employeeName: event.employee?.name ?? null,
           rentalId: event.rentalId,
+          source: event.source === "CUSTOMER" || event.notes?.includes("Customer requested pickup") ? "CUSTOMER" : event.source,
         }))}
       />
     </div>

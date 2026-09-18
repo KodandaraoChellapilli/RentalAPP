@@ -12,6 +12,14 @@ export function OPTIONS() {
   return options();
 }
 
+function parseHasIssue(value: FormDataEntryValue | null): "yes" | "no" {
+  const raw = String(value || "");
+  if (raw !== "yes" && raw !== "no") {
+    throw new ServiceError("Report whether there is damage or an issue.");
+  }
+  return raw;
+}
+
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const user = requireStaff(await requireApiUser(request, ["EMPLOYEE", "ADMIN"]));
@@ -31,7 +39,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       rentalId,
       notes: String(form.get("notes") || ""),
       conditionConfirmed: confirmed(form.get("conditionConfirmed")),
-      hasIssue: String(form.get("hasIssue") || "") === "yes" ? "yes" : "no",
+      hasIssue: parseHasIssue(form.get("hasIssue")),
       afterStatus: String(form.get("afterStatus") || ""),
       photos: filesFromRequest(form),
     });

@@ -25,6 +25,7 @@ export default async function CalendarPage({
     }),
   ]);
 
+  const now = new Date();
   return (
     <div>
       <PageHeader
@@ -33,7 +34,14 @@ export default async function CalendarPage({
         action={{ href: "/admin/schedule/new", label: "New schedule" }}
       />
       <ErrorBanner message={error} />
-      <CalendarMonth events={events} employees={employees} />
+      <CalendarMonth
+        events={events}
+        employees={employees}
+        initialYear={now.getFullYear()}
+        initialMonth={now.getMonth()}
+        initialDate={now.getDate()}
+        asOf={now.getTime()}
+      />
     </div>
   );
 }

@@ -1,9 +1,11 @@
 import { AfterPickupPhotos } from "@/components/photos/AfterPickupPhotos";
 import { BeforeDeliveryPhotos } from "@/components/photos/BeforeDeliveryPhotos";
+import { LiveCharge } from "@/components/LiveCharge";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Panel } from "@/components/ui/Panel";
+import { formatDuration, formatRate } from "@/lib/billing";
 import type { PhotoView } from "@/lib/photo-labels";
-import { formatDateTime } from "@/lib/utils";
+import { formatDate, formatDateTime } from "@/lib/utils";
 
 type HistoryEvent = {
   type: string;
@@ -19,6 +21,9 @@ type HistoryRental = {
   endAt: Date | string | null;
   destination: string | null;
   notes: string | null;
+  rateSnapshot?: number;
+  billingUnitSnapshot?: string;
+  finalAmount?: number | null;
   customer: { name: string };
   photos: PhotoView[];
   events?: HistoryEvent[];
@@ -56,8 +61,8 @@ export function EquipmentConditionHistory({
   return (
     <section className="space-y-6">
       <Panel
-        title="Equipment Condition History"
-        subtitle={`Compare before vs after for #${equipmentNumber} ${equipmentName}. This is the permanent visual record of what left the yard and what came back.`}
+        title="Rental history"
+        subtitle={`#${equipmentNumber} ${equipmentName}. Each rental includes the customer, rate, employees, condition notes, and before/after photos.`}
       >
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div className="rounded-xl border border-orange-200 bg-orange-50 px-4 py-3">
@@ -90,9 +95,23 @@ export function EquipmentConditionHistory({
             <article key={rental.id} className="card overflow-hidden">
               <div className="flex flex-wrap items-start justify-between gap-3 border-b border-stone-100 px-5 py-4">
                 <div>
-                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-orange-700">Rental condition record</p>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-orange-700">Rental history</p>
                   <h3 className="mt-1 text-lg font-semibold text-stone-900">{rental.customer.name}</h3>
-                  <p className="text-sm text-stone-500">{rental.destination || "No destination recorded"}</p>
+                  <p className="text-sm text-stone-500">
+                    {formatDate(rental.startAt)} → {formatDate(rental.endAt)}
+                    {rental.destination ? ` · ${rental.destination}` : ""}
+                  </p>
+                  {rental.rateSnapshot != null && rental.billingUnitSnapshot ? (
+                    <p className="mt-1 text-sm text-stone-600">
+                      Rate: {formatRate(rental.rateSnapshot, rental.billingUnitSnapshot)}
+                      {rental.startAt
+                        ? ` · Duration: ${formatDuration(
+                            (rental.endAt ? new Date(rental.endAt).getTime() : new Date(rental.startAt).getTime()) -
+                              new Date(rental.startAt).getTime(),
+                          )}`
+                        : ""}
+                    </p>
+                  ) : null}
                 </div>
                 <StatusBadge kind="rental" status={rental.status} />
               </div>
@@ -103,7 +122,7 @@ export function EquipmentConditionHistory({
                   <p className="mt-1 text-sm text-stone-600">This documents the equipment before the customer receives it.</p>
                   <div className="mt-3 space-y-1 text-sm text-stone-600">
                     <p>Date: {formatDateTime(rental.startAt || delivery?.completedAt)}</p>
-                    <p>Employee: {firstEmployee(before, delivery)}</p>
+                    <p>Delivered by: {firstEmployee(before, delivery)}</p>
                     <p>Customer: {rental.customer.name}</p>
                     <p>Condition notes: {firstNotes(before, delivery)}</p>
                   </div>
@@ -121,7 +140,7 @@ export function EquipmentConditionHistory({
                   <p className="mt-1 text-sm text-stone-600">This documents the equipment after the customer returns it.</p>
                   <div className="mt-3 space-y-1 text-sm text-stone-600">
                     <p>Date: {formatDateTime(rental.endAt || pickup?.completedAt)}</p>
-                    <p>Employee: {firstEmployee(after, pickup)}</p>
+                    <p>Picked up by: {firstEmployee(after, pickup)}</p>
                     <p>Customer: {rental.customer.name}</p>
                     <p>Condition notes: {afterNotes}</p>
                     <p>
@@ -139,6 +158,20 @@ export function EquipmentConditionHistory({
                   </div>
                 </div>
               </div>
+              {rental.rateSnapshot != null && rental.billingUnitSnapshot ? (
+                <div className="border-t border-stone-100 px-5 py-4">
+                  <LiveCharge
+                    compact
+                    asOf={Date.now()}
+                    startAt={rental.startAt}
+                    endAt={rental.endAt}
+                    rate={rental.rateSnapshot}
+                    unit={rental.billingUnitSnapshot}
+                    status={rental.status}
+                    finalAmount={rental.finalAmount}
+                  />
+                </div>
+              ) : null}
             </article>
           );
         })
