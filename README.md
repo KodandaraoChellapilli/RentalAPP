@@ -569,7 +569,9 @@ Defined in `.env.example`. Do not invent additional secrets; the app only reads 
 | Variable | Purpose |
 | --- | --- |
 | `DATABASE_URL` | Prisma SQLite URL. Default: `file:./dev.db` (file at `prisma/dev.db` because Prisma resolves it relative to the `prisma/` folder). |
-| `AUTH_SECRET` | HMAC secret for the `rental_session` cookie. Use a long random string in any shared environment. |
+| `AUTH_SECRET` | HMAC secret for the `rental_session` cookie. Use a long random string in any shared environment. Production rejects the development default. |
+| `CORS_ORIGINS` | Comma-separated browser origins. Empty until the production site is chosen. Development allows localhost. Production ignores `*`. |
+| `FILE_STORAGE_DIR` | Optional directory for private customer PDFs. Defaults to `storage/private`. |
 
 `.env` is gitignored.
 

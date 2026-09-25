@@ -18,6 +18,7 @@ type Dashboard = {
   clockedInCount: number;
   todayDeliveries: number;
   todayPickups: number;
+  invoices?: { total: number; paid: number; unpaid: number; outstandingLabel: string };
   activeRentals: Rental[];
   todayEvents?: Job[];
   openEvents: Job[];
@@ -57,6 +58,17 @@ export default function OwnerDashboard() {
               </Text>
             )}
           </Card>
+
+          {data.invoices ? (
+            <Card>
+              <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+                <Stat label="Invoices" value={data.invoices.total} />
+                <Stat label="Paid" value={data.invoices.paid} />
+                <Stat label="Unpaid" value={data.invoices.unpaid} />
+                <Stat label="Outstanding" value={data.invoices.outstandingLabel} />
+              </View>
+            </Card>
+          ) : null}
 
           <SectionTitle title="Active rentals" />
           {data.activeRentals.length === 0 ? (

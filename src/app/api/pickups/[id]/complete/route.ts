@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { canAccessEvent, requireStaff } from "@/lib/api/access";
+import { canAccessEvent } from "@/lib/api/access";
 import { fail, filesFromRequest, json, options, requireApiUser } from "@/lib/api/http";
 import { confirmed } from "@/lib/api/serialize";
 import { prisma } from "@/lib/prisma";
@@ -22,7 +22,7 @@ function parseHasIssue(value: FormDataEntryValue | null): "yes" | "no" {
 
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
-    const user = requireStaff(await requireApiUser(request, ["EMPLOYEE", "ADMIN"]));
+    const user = await requireApiUser(request, ["EMPLOYEE", "ADMIN", "MANAGER"]);
     const { id } = await context.params;
     const form = await request.formData();
 

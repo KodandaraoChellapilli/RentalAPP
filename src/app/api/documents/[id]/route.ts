@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireOperations } from "@/lib/api/access";
 import { fail, json, options, requireApiUser } from "@/lib/api/http";
+import { safeDownloadName } from "@/lib/documents";
 import { deleteCustomerDocument, readCustomerDocument } from "@/lib/services/documents";
 
 type Params = { params: Promise<{ id: string }> };
@@ -18,7 +19,7 @@ export async function GET(request: NextRequest, { params }: Params) {
     return new NextResponse(new Uint8Array(bytes), {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `inline; filename="${document.name.replaceAll('"', "")}.pdf"`,
+        "Content-Disposition": `inline; filename="${safeDownloadName(document.name)}"`,
         "Cache-Control": "private, no-store",
       },
     });

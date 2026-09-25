@@ -30,6 +30,13 @@ export async function GET(request: NextRequest) {
       openEvents: data.openEvents.map(eventJson),
       availableEquipment: data.availableEquipment.map((item) => equipmentSummary(item, origin)),
       needingAttention: data.needingAttention.map((item) => equipmentSummary(item, origin)),
+      invoices: {
+        total: data.invoices.total,
+        paid: data.invoices.paid,
+        unpaid: data.invoices.unpaid,
+        outstanding: data.invoices.outstanding,
+        outstandingLabel: formatMoney(data.invoices.outstanding),
+      },
       employees: data.employees.map((employee) => ({
         ...employee,
         todayLabel: formatDuration(employee.todayMs),

@@ -1,23 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
+import { corsHeaderRecord } from "@/lib/cors";
+import { uploadAccessGranted } from "@/lib/photo-access";
 import { SESSION_COOKIE, decodeSession } from "@/lib/session-token";
 import { homeFor } from "@/lib/constants";
 
 const PUBLIC = ["/login"];
 const PROTECTED_PREFIXES = ["/admin", "/employee", "/customer", "/account"];
 
+function withCors(request: NextRequest, response: NextResponse) {
+  const headers = corsHeaderRecord(request.headers.get("origin"));
+  for (const [key, value] of Object.entries(headers)) response.headers.set(key, value);
+  if (request.nextUrl.pathname.startsWith("/uploads")) {
+    response.headers.set("Cross-Origin-Resource-Policy", "cross-origin");
+    response.headers.set("Cache-Control", "private, max-age=3600");
+  }
+  return response;
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  if (
-    pathname.startsWith("/_next") ||
-    pathname.startsWith("/uploads") ||
-    pathname === "/favicon.ico"
-  ) {
-    const response = NextResponse.next();
-    if (pathname.startsWith("/uploads")) {
-      response.headers.set("Access-Control-Allow-Origin", "*");
-      response.headers.set("Cross-Origin-Resource-Policy", "cross-origin");
-    }
-    return response;
+  if (pathname.startsWith("/api")) {
+    if (request.method === "OPTIONS") return withCors(request, new NextResponse(null, { status: 204 }));
+    return withCors(request, NextResponse.next());
+  }
+  if (pathname.startsWith("/_next") || pathname === "/favicon.ico") {
+    return NextResponse.next();
+  }
+  if (pathname.startsWith("/uploads")) {
+    const allowed = await uploadAccessGranted(
+      pathname,
+      request.nextUrl.searchParams.get("exp"),
+      request.nextUrl.searchParams.get("sig"),
+    );
+    if (!allowed) return new NextResponse("Not found", { status: 404 });
+    return withCors(request, NextResponse.next());
   }
 
   const token = request.cookies.get(SESSION_COOKIE)?.value;
@@ -59,5 +75,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };

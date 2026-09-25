@@ -3,6 +3,7 @@ import { BeforeDeliveryPhotos } from "@/components/photos/BeforeDeliveryPhotos";
 import { LiveCharge } from "@/components/LiveCharge";
 import { StatusBadge } from "@/components/StatusBadge";
 import { formatDuration, formatMoney, formatRate } from "@/lib/billing";
+import { signPhotoPaths } from "@/lib/photo-access";
 import type { PhotoView } from "@/lib/photo-labels";
 import Link from "next/link";
 import { formatDate, formatDateTime } from "@/lib/utils";
@@ -44,7 +45,7 @@ function damageLabel(notes: string | null | undefined) {
   return "Condition noted";
 }
 
-export function EquipmentConditionHistory({
+export async function EquipmentConditionHistory({
   equipmentNumber,
   equipmentName,
   rentals,
@@ -53,6 +54,9 @@ export function EquipmentConditionHistory({
   equipmentName: string;
   rentals: HistoryRental[];
 }) {
+  const signedRentals = await Promise.all(
+    rentals.map(async (rental) => ({ ...rental, photos: await signPhotoPaths(rental.photos) })),
+  );
   return (
     <section>
       <div className="mb-3">
@@ -63,13 +67,13 @@ export function EquipmentConditionHistory({
         </p>
       </div>
 
-      {rentals.length === 0 ? (
+      {signedRentals.length === 0 ? (
         <div className="card px-4 py-8 text-center text-sm text-stone-500">
           No rental history yet. Completing a delivery with before photos starts this record.
         </div>
       ) : (
         <div className="space-y-3">
-          {rentals.map((rental) => {
+          {signedRentals.map((rental) => {
             const before = rental.photos.filter((photo) => photo.type === "DELIVERY");
             const after = rental.photos.filter((photo) => photo.type === "PICKUP");
             const delivery = rental.events?.find((event) => event.type === "DELIVERY");

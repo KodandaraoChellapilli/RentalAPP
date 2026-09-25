@@ -1,6 +1,7 @@
 import { ErrorBanner, PageHeader } from "@/components/PageHeader";
 import { PickupForm } from "@/components/PickupForm";
 import { photoInclude } from "@/lib/photos";
+import { signPhotoPaths } from "@/lib/photo-access";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/session";
 
@@ -49,7 +50,7 @@ export default async function PickupPage({
       />
       <ErrorBanner message={error} />
       <PickupForm
-        rentals={rentals.map((rental) => ({
+        rentals={await Promise.all(rentals.map(async (rental) => ({
           id: rental.id,
           startAt: rental.startAt,
           destination: rental.destination,
@@ -58,8 +59,8 @@ export default async function PickupPage({
           billingUnitSnapshot: rental.billingUnitSnapshot,
           equipment: rental.equipment,
           customer: rental.customer,
-          beforePhotos: rental.photos,
-        }))}
+          beforePhotos: await signPhotoPaths(rental.photos),
+        })))}
         eventId={eventId}
         initialRentalId={rentalId}
       />

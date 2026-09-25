@@ -32,6 +32,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
             customer: true,
             photos: { include: photoInclude, orderBy: { takenAt: "asc" } },
             events: { include: { employee: true }, orderBy: { startAt: "asc" } },
+            invoice: true,
           },
           orderBy: { createdAt: "desc" },
         },

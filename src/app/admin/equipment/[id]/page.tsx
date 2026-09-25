@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { EquipmentConditionHistory } from "@/components/photos/EquipmentConditionHistory";
 import { StatusBadge } from "@/components/StatusBadge";
 import { formatRate } from "@/lib/billing";
+import { signUploadPath } from "@/lib/photo-access";
 import { photoInclude } from "@/lib/photos";
 import { prisma } from "@/lib/prisma";
 import { formatDateTime } from "@/lib/utils";
@@ -34,6 +35,7 @@ export default async function EquipmentDetailPage({ params }: { params: Promise<
   if (!equipment) notFound();
 
   const current = equipment.rentals.find((rental) => rental.status === "ACTIVE" || rental.status === "SCHEDULED");
+  const cover = equipment.photos[0] ? await signUploadPath(equipment.photos[0].path) : null;
 
   return (
     <div>
@@ -44,10 +46,10 @@ export default async function EquipmentDetailPage({ params }: { params: Promise<
       />
       <div className="mb-5 grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
         <section className="card overflow-hidden p-0">
-          {equipment.photos[0] ? (
+          {equipment.photos[0] && cover ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={equipment.photos[0].path}
+              src={cover}
               alt={`#${equipment.number} ${equipment.name}`}
               className="h-56 w-full bg-stone-100 object-cover"
             />

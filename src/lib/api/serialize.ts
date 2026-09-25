@@ -180,6 +180,7 @@ export function rentalHistoryJson(
       notes?: string | null;
       employee?: { name: string } | null;
     }>;
+    invoice?: { id: string; number: string; status: string; total: number } | null;
   },
   origin: string,
 ) {
@@ -196,6 +197,9 @@ export function rentalHistoryJson(
     beforePhotos: before.map((photo) => photoJson(photo, origin)),
     afterPhotos: after.map((photo) => photoJson(photo, origin)),
     photos: photos.map((photo) => photoJson(photo, origin)),
+    invoice: rental.invoice
+      ? { id: rental.invoice.id, number: rental.invoice.number, status: rental.invoice.status, total: rental.invoice.total }
+      : null,
     events: events.map((event) => ({
       id: event.id,
       type: event.type,

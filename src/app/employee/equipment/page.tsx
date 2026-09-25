@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { formatRate } from "@/lib/billing";
 import { employeeJobHref } from "@/lib/jobs";
+import { signUploadPath } from "@/lib/photo-access";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/session";
 
@@ -25,6 +26,11 @@ export default async function EmployeeEquipmentPage() {
     }
   }
   const items = [...byEquipment.values()];
+  const photoPaths = new Map<string, string>();
+  for (const job of items) {
+    const photo = job.equipment?.photos[0];
+    if (job.equipmentId && photo) photoPaths.set(job.equipmentId, await signUploadPath(photo.path));
+  }
 
   return (
     <div>
@@ -44,7 +50,7 @@ export default async function EmployeeEquipmentPage() {
                 status={job.equipment.status}
                 rateLabel={formatRate(job.equipment.rate, job.equipment.billingUnit)}
                 customerName={job.customer?.name}
-                photoPath={job.equipment.photos[0]?.path}
+                photoPath={job.equipmentId ? photoPaths.get(job.equipmentId) : undefined}
                 actionLabel={job.type === "PICKUP" ? "Open pickup" : "Open delivery"}
               />
             ) : null,

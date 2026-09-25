@@ -46,6 +46,9 @@ function reachableOrigin(url: string) {
 
 export function defaultApiUrl() {
   if (process.env.EXPO_PUBLIC_API_URL) return reachableOrigin(process.env.EXPO_PUBLIC_API_URL);
+  if (!__DEV__) {
+    throw new Error("Set EXPO_PUBLIC_API_URL before building the production app.");
+  }
   const host = lanHost();
   if (host) return `http://${host}:3001`;
   if (Platform.OS === "android") return "http://10.0.2.2:3001";

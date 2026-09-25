@@ -7,6 +7,7 @@ import { BeforeAfterPhotos } from "@/components/photos/BeforeAfterPhotos";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Panel } from "@/components/ui/Panel";
 import { formatMoney, formatRate } from "@/lib/billing";
+import { signPhotoPaths } from "@/lib/photo-access";
 import { photoInclude } from "@/lib/photos";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/session";
@@ -36,6 +37,7 @@ export default async function CustomerRentalDetailPage({
   if (!rental) notFound();
   if (user.role === "CUSTOMER" && rental.customerId !== user.customerId) notFound();
 
+  const photos = await signPhotoPaths(rental.photos);
   const delivery = rental.events.find((event) => event.type === "DELIVERY");
   const pickupRequest = rental.events.find((event) => event.type === "PICKUP" && !event.completedAt);
   const canConfirmDelivery = Boolean(
@@ -107,7 +109,7 @@ export default async function CustomerRentalDetailPage({
       ) : null}
       <div className="mt-6">
         <BeforeAfterPhotos
-          photos={rental.photos}
+          photos={photos}
           beforeEmpty="Photos will appear after delivery."
           afterEmpty="Photos will appear after pickup."
         />

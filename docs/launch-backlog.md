@@ -12,12 +12,13 @@ The rental platform stays the operational system. A future public marketing site
 | Database | SQLite file (`DATABASE_URL=file:./dev.db`) | A hosted database. SQLite on one laptop is not a shared production store. |
 | Domain | None | Sam’s domain choice. Do not purchase yet. |
 | HTTPS | Dev server is HTTP | Terminate TLS on the host. Production must not use the LAN HTTP URL. |
-| API URL | Mobile uses `EXPO_PUBLIC_API_URL`, then a saved server URL | Set the production URL in the mobile env at build time. Remove reliance on localhost, `10.0.2.2`, and the LAN fallback. |
+| API URL | Mobile uses `EXPO_PUBLIC_API_URL`, then a saved server URL | Set `EXPO_PUBLIC_API_URL` for a production build. A production build fails if that variable is missing. Development may still use localhost, `10.0.2.2`, or the Expo LAN host. |
 | Secrets | `AUTH_SECRET` is required in production and rejects the dev default | Generate a long random secret. Do not commit it. |
-| Sessions | Signed cookie and bearer token, 14 days | Keep the existing signer. Confirm cookie `Secure` on HTTPS before go-live. |
+| Sessions | Signed cookie and bearer token, 14 days | Logout clears the website cookie and the phone deletes its saved token. A copied bearer token stays valid until it expires. There is no server-side revocation list. |
 | Backups | None | Daily database backup and a tested restore. |
-| Photos | Files in `public/uploads` on local disk | Object storage (or a persistent volume) plus backup. Do not put files in SQLite. |
-| CORS | API and `/uploads` allow any origin | Restrict browser origins to the real site. Mobile bearer calls can stay allowed. |
+| Photos | Condition photos stay in `public/uploads` and require a signed URL | Persistent object storage or a volume that survives deploys, plus backup. Direct `/uploads` paths without a signature return 404. |
+| Customer PDFs | `storage/private` (or `FILE_STORAGE_DIR`) | The same persistent store. This directory is not served as a public website path. |
+| CORS | `CORS_ORIGINS` allowlist. Development allows localhost. Production ignores `*` | Set the real site origin when Sam chooses it. Do not leave production on a wildcard. |
 | Monitoring | Console and skipped notifications when no provider is set | Error reporting and an uptime check on `/api/health`. |
 | Recovery | Not written | Who restarts the app, where backups live, and how to restore photos. |
 | iOS / Android | Same backend and roles | Production builds point at the production API. No separate mobile billing or status rules. |
@@ -31,29 +32,24 @@ The rental platform stays the operational system. A future public marketing site
 - Photo storage provider, or confirmation that a single server disk is acceptable for the first weeks.
 - `AUTH_SECRET` and database URL, stored as host secrets.
 - Real emails for Sam, Aaron, and Vinny. Passwords are set by them, not written into the repo.
-- Whether Aaron (manager) may create rentals and see all customers, or only operate transports and equipment. Today only `ADMIN` can open owner screens. `EMPLOYEE` is field work. There is no `MANAGER` role.
+- Whether Aaron (manager) may create rentals and see all customers, or only operate transports and equipment. The app now has a `MANAGER` role for yard work: dashboard, rentals, equipment, transports, customers, invoices, and insurance documents. Managers cannot manage employees, open reports, or create customer portal logins.
 - Whether Vinny’s “admin/developer” account is the existing `ADMIN` role (same access as Sam) or a separate account with the same role. Do not invent a weaker admin that bypasses checks.
 - Notification provider, if pickup and delivery messages must actually send. Without one, the app records the event and skips the message.
 - Who owns backups and what “restore” means on day one.
 
-## Roles (not built yet)
+## Roles
 
-Existing roles are only `ADMIN`, `EMPLOYEE`, and `CUSTOMER`. The owner UI is the `ADMIN` role. Sam Carson is the seeded admin.
+`ADMIN` is the owner. `MANAGER` runs the yard and cannot manage employees, reports, or customer portal logins. `EMPLOYEE` is field work. `CUSTOMER` sees only their own rentals, invoices, and documents.
 
-Requested people:
+Sam Carson is the seeded admin. Aaron and Vinny still need real accounts that Sam creates. Do not hardcode their passwords.
 
-- Sam Carson → owner. Maps to existing `ADMIN` until a separate owner name exists.
-- Aaron → manager. Needs an explicit permission list before any new role is added. Do not give Aaron employee-only access if he must run the yard, and do not give him every admin screen by default.
-- Vinny → admin/developer. Can use `ADMIN` if Sam wants the same access as the owner. Do not hardcode a password.
+## Already in the app
 
-## Backlog (do not start until this plan is accepted)
+Invoices, customer history, certificate-of-insurance PDFs, equipment history, the manager role, and the public equipment read API are implemented. Square is not connected. Hosting, a production database, persistent file storage, backups, and a domain are not set up.
 
-1. Invoice payment status. Add invoice number, customer, rental, equipment, dates, line items, total, due date, and status `UNPAID` or `PAID`. Leave room for overdue, cancelled, and partial. Totals come from `calculateCharge` / `rentalCharge` and the rental’s stored `finalAmount`. Do not add a second calculator.
-2. Rental detail shows its invoice and payment status. Customer profile lists invoice history. One invoice record per charge, linked to the rental.
-3. Customer profile reads existing customer, contact, rentals, equipment, dates, duration, rate snapshots, photos, and notes. No copied history tables.
-4. Certificate of Insurance: PDF upload on the customer, view/download, upload date, customer ownership. Store the file the same way other uploads will be stored in production (object storage or the existing uploads directory, not a blob column). Shape the record so other customer documents can be added later.
-5. Damage history stays on the rental and equipment photo history: customer, equipment, dates, delivery, pickup, before/after photos, condition notes, damage notes, final charge, and the related invoice.
-6. Future marketing site calls authenticated or public read APIs for equipment name, number, photos, description, rates, and availability. Quote requests are written into this platform. Do not build that site in this repo.
+## Production database
+
+The current database is SQLite in `prisma/dev.db`. Invoice, invoice line, and customer document tables are already in that schema, including one invoice per rental. Do not treat that file as the production database. Production needs a hosted database Sam chooses, with backups. This audit does not migrate the database.
 
 ## Verification already run on the pushed commit
 

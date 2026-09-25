@@ -3,21 +3,16 @@ import { cookies } from "next/headers";
 import type { Role } from "@/lib/constants";
 import { hydrateSessionUser } from "@/lib/hydrate-session";
 import { isAllowedPhotoFile } from "@/lib/photo-files";
+import { signMediaFields } from "@/lib/photo-access";
 import { SESSION_COOKIE, decodeSession, type SessionUser } from "@/lib/session-token";
 import { ServiceError } from "@/lib/services/errors";
 
-export const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "Authorization, Content-Type",
-  "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-};
-
-export function json(data: unknown, status = 200) {
-  return NextResponse.json(data, { status, headers: corsHeaders });
+export async function json(data: unknown, status = 200) {
+  return NextResponse.json(await signMediaFields(data), { status });
 }
 
 export function options() {
-  return new NextResponse(null, { status: 204, headers: corsHeaders });
+  return new NextResponse(null, { status: 204 });
 }
 
 export function fail(error: unknown) {

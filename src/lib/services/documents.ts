@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
 import { DOCUMENT_TYPES, type DocumentType } from "@/lib/constants";
-import { documentStorageKey, validatePdfFile } from "@/lib/documents";
+import { documentStorageKey, isPdfBytes, validatePdfFile } from "@/lib/documents";
 import { prisma } from "@/lib/prisma";
 import { deleteStoredFile, readStoredFile, saveStoredFile } from "@/lib/storage/files";
 import { ServiceError } from "@/lib/services/errors";
@@ -32,6 +32,7 @@ export async function saveCustomerPdf(opts: {
   const id = randomUUID();
   const storageKey = documentStorageKey(opts.customerId, id);
   const bytes = Buffer.from(await opts.file.arrayBuffer());
+  if (!isPdfBytes(bytes)) throw new ServiceError("Only PDF files can be uploaded.", 400);
   await saveStoredFile(storageKey, bytes);
 
   return prisma.customerDocument.create({
@@ -52,8 +53,16 @@ export async function readCustomerDocument(id: string, user: SessionUser) {
   const document = await prisma.customerDocument.findUnique({ where: { id } });
   if (!document) throw new ServiceError("Document not found.", 404);
   assertCanAccessCustomer(user, document.customerId);
-  const bytes = await readStoredFile(document.storageKey);
-  return { document, bytes };
+  try {
+    const bytes = await readStoredFile(document.storageKey);
+    return { document, bytes };
+  } catch (error) {
+    const code = error && typeof error === "object" && "code" in error ? String(error.code) : "";
+    if (code === "ENOENT" || (error instanceof Error && error.message === "Invalid storage path.")) {
+      throw new ServiceError("Document file is missing.", 404);
+    }
+    throw error;
+  }
 }
 
 export async function deleteCustomerDocument(id: string) {

@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { canAccessEvent, requireStaff } from "@/lib/api/access";
+import { canAccessEvent } from "@/lib/api/access";
 import { fail, json, options, publicOrigin, requireApiUser } from "@/lib/api/http";
 import { eventJson, photoJson, rentalJson } from "@/lib/api/serialize";
 import { photoInclude } from "@/lib/photos";
@@ -13,7 +13,7 @@ export function OPTIONS() {
 
 export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
-    const user = requireStaff(await requireApiUser(request, ["EMPLOYEE", "ADMIN"]));
+    const user = await requireApiUser(request, ["EMPLOYEE", "ADMIN", "MANAGER"]);
     const { id } = await context.params;
     const origin = publicOrigin(request);
 

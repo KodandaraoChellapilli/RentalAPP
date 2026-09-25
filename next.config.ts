@@ -11,17 +11,6 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.join(__dirname),
   },
-  async headers() {
-    return [
-      {
-        source: "/uploads/:path*",
-        headers: [
-          { key: "Access-Control-Allow-Origin", value: "*" },
-          { key: "Cross-Origin-Resource-Policy", value: "cross-origin" },
-        ],
-      },
-    ];
-  },
 };
 
 export default nextConfig;

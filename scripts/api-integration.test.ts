@@ -443,9 +443,11 @@ test("customer pickup request creates a pickup transport without completing the 
   assert.ok((row.beforePhotos || []).length >= 1);
   const beforePhoto = (row.beforePhotos as Array<{ url: string }>)[0];
   assert.match(beforePhoto.url, /^http:\/\//);
-  const storedPhoto = await fetch(`${BASE}${new URL(beforePhoto.url).pathname}`);
-  assert.equal(storedPhoto.status, 200, "condition photo file should be reachable");
+  const storedPhoto = await fetch(beforePhoto.url);
+  assert.equal(storedPhoto.status, 200, "signed condition photo should be reachable");
   assert.match(storedPhoto.headers.get("content-type") || "", /image\//);
+  const barePhoto = await fetch(`${BASE}${new URL(beforePhoto.url).pathname}`);
+  assert.equal(barePhoto.status, 404, "unsigned condition photo path must stay private");
 
   const lanHistory = await fetch(`${BASE}/api/equipment/${machine.id}`, {
     headers: {

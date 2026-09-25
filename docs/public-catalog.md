@@ -10,7 +10,8 @@ Each item:
 - `status`
 - `available` (`true` only when status is `AVAILABLE`)
 - `rate`, `billingUnit`, `rateLabel`
-- `description` (the equipment notes field)
-- `photoUrl` when a photo exists
+- `photoUrl` only for a photo that is not attached to a rental
+
+It does not return equipment notes, customer names, invoices, insurance documents, damage or condition notes, or employee names. Rental before/after photos are not included. `POST`, `PUT`, and `DELETE` are not supported.
 
 Do not point the marketing site at owner, customer, or document routes.

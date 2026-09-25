@@ -12,12 +12,18 @@ export const SESSION_COOKIE = "rental_session";
 /** Signed session lifetime (cookie maxAge and bearer tokens share this). */
 export const SESSION_TTL_MS = 60 * 60 * 24 * 14;
 
-function secret() {
-  const value = process.env.AUTH_SECRET;
-  if (process.env.NODE_ENV === "production" && (!value || value === "rental-app-dev-secret-change-me")) {
+export const DEV_AUTH_SECRET = "rental-app-dev-secret-change-me";
+
+export function authSecret(env: { NODE_ENV?: string; AUTH_SECRET?: string } = process.env) {
+  const value = env.AUTH_SECRET;
+  if (env.NODE_ENV === "production" && (!value || value === DEV_AUTH_SECRET)) {
     throw new Error("AUTH_SECRET must be set to a strong value in production.");
   }
-  return value || "rental-app-dev-secret-change-me";
+  return value || DEV_AUTH_SECRET;
+}
+
+function secret() {
+  return authSecret();
 }
 
 function bytesToHex(bytes: ArrayBuffer | Uint8Array) {
@@ -64,8 +70,8 @@ async function sign(value: string) {
 
 type SessionPayload = SessionUser & { exp?: number };
 
-export async function encodeSession(user: SessionUser) {
-  const body: SessionPayload = { ...user, exp: Date.now() + SESSION_TTL_MS };
+export async function encodeSession(user: SessionUser, ttlMs = SESSION_TTL_MS) {
+  const body: SessionPayload = { ...user, exp: Date.now() + ttlMs };
   const payload = toBase64Url(JSON.stringify(body));
   return `${payload}.${await sign(payload)}`;
 }
