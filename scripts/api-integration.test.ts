@@ -50,6 +50,22 @@ function tinyPng(): Blob {
   return new Blob([Buffer.from(b64, "base64")], { type: "image/png" });
 }
 
+async function acquireAvailableMachine() {
+  const existing = await prisma.equipment.findFirst({ where: { status: "AVAILABLE" } });
+  if (existing) return existing;
+  return prisma.equipment.create({
+    data: {
+      number: `T${Date.now().toString().slice(-8)}`,
+      name: "API Test Machine",
+      type: "Loader",
+      status: "AVAILABLE",
+      rate: 100,
+      billingUnit: "DAILY",
+      notes: "Created by api-integration tests",
+    },
+  });
+}
+
 test("health endpoint is up", async () => {
   const res = await fetch(`${BASE}/api/health`);
   assert.equal(res.status, 200);
@@ -145,19 +161,7 @@ test("workflow: delivery → active → damaged pickup → maintenance + no doub
   const employee = await login("employee@rental.app");
   const lena = await login("lena@rental.app");
 
-  // Prefer AVAILABLE; otherwise temporarily free a non-active machine for the audit run.
-  let machine = await prisma.equipment.findFirst({ where: { status: "AVAILABLE" } });
-  if (!machine) {
-    machine = await prisma.equipment.findFirst({
-      where: {
-        status: { in: ["MAINTENANCE", "SCHEDULED", "OUT_OF_SERVICE"] },
-        rentals: { none: { status: { in: ["ACTIVE", "SCHEDULED"] } } },
-      },
-    });
-    assert.ok(machine, "need a machine that is not currently rented");
-    await prisma.equipment.update({ where: { id: machine.id }, data: { status: "AVAILABLE" } });
-    machine = await prisma.equipment.findUniqueOrThrow({ where: { id: machine.id } });
-  }
+  const machine = await acquireAvailableMachine();
 
   const customer = await prisma.customer.findFirst({ where: { name: { contains: "ABC" } } });
   assert.ok(customer);
@@ -327,18 +331,7 @@ test("customer pickup request creates a pickup transport without completing the 
   const abc = await login("abc@rental.app");
   const xyz = await login("xyz@rental.app");
 
-  let machine = await prisma.equipment.findFirst({ where: { status: "AVAILABLE" } });
-  if (!machine) {
-    machine = await prisma.equipment.findFirst({
-      where: {
-        status: { in: ["MAINTENANCE", "SCHEDULED", "OUT_OF_SERVICE"] },
-        rentals: { none: { status: { in: ["ACTIVE", "SCHEDULED"] } } },
-      },
-    });
-    assert.ok(machine, "need a free machine");
-    await prisma.equipment.update({ where: { id: machine.id }, data: { status: "AVAILABLE" } });
-    machine = await prisma.equipment.findUniqueOrThrow({ where: { id: machine.id } });
-  }
+  const machine = await acquireAvailableMachine();
 
   const customer = await prisma.customer.findFirst({ where: { name: { contains: "ABC" } } });
   assert.ok(customer);
@@ -448,6 +441,26 @@ test("customer pickup request creates a pickup transport without completing the 
   assert.equal(row.customer?.name.includes("ABC"), true);
   assert.equal(row.deliveredBy, employee.user.name);
   assert.ok((row.beforePhotos || []).length >= 1);
+  const beforePhoto = (row.beforePhotos as Array<{ url: string }>)[0];
+  assert.match(beforePhoto.url, /^http:\/\//);
+  const storedPhoto = await fetch(`${BASE}${new URL(beforePhoto.url).pathname}`);
+  assert.equal(storedPhoto.status, 200, "condition photo file should be reachable");
+  assert.match(storedPhoto.headers.get("content-type") || "", /image\//);
+
+  const lanHistory = await fetch(`${BASE}/api/equipment/${machine.id}`, {
+    headers: {
+      Authorization: `Bearer ${admin.token}`,
+      "x-forwarded-host": "10.0.0.147:3001",
+    },
+  });
+  assert.equal(lanHistory.status, 200);
+  const lanBody = (await lanHistory.json()) as {
+    history: Array<{ id: string; beforePhotos?: Array<{ url: string }> }>;
+    equipment?: { photoUrl?: string | null };
+  };
+  const lanRow = lanBody.history.find((item) => item.id === rental.id);
+  assert.ok(lanRow?.beforePhotos?.[0]?.url.startsWith("http://10.0.0.147:3001/uploads/"));
+  assert.equal(lanBody.equipment?.photoUrl?.startsWith("https://"), false);
 
   const transports = await api(admin.token, "/api/transports");
   assert.equal(transports.res.status, 200);

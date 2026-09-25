@@ -9,12 +9,12 @@ export function CustomerEndRentalForm({
   defaultLocation?: string | null;
 }) {
   return (
-    <form action={requestCustomerPickup} className="card mt-6 space-y-4 p-5">
+    <form action={requestCustomerPickup} className="card mt-5 space-y-4 p-4">
       <input type="hidden" name="rentalId" value={rentalId} />
       <div>
         <h2 className="font-semibold">End rental</h2>
         <p className="mt-1 text-sm text-stone-500">
-          Request a pickup. The rental stays active until the yard completes the pickup.
+          This requests a pickup. The rental stays active until pickup is completed.
         </p>
       </div>
       <label className="block">
@@ -42,7 +42,7 @@ export function CustomerEndRentalForm({
 
 export function CustomerConfirmDeliveryForm({ rentalId }: { rentalId: string }) {
   return (
-    <form action={confirmCustomerDelivery} className="card mt-6 space-y-3 p-5">
+    <form action={confirmCustomerDelivery} className="card mt-5 space-y-3 p-4">
       <input type="hidden" name="rentalId" value={rentalId} />
       <h2 className="font-semibold">Confirm delivery details</h2>
       <p className="text-sm text-stone-500">

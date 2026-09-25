@@ -33,5 +33,5 @@ export function SignOutButton() {
 
 const styles = StyleSheet.create({
   press: { paddingHorizontal: 16, minHeight: 44, justifyContent: "center" },
-  label: { color: colors.amber, fontWeight: "700", fontSize: 14 },
+  label: { color: colors.ink, fontWeight: "600", fontSize: 14 },
 });

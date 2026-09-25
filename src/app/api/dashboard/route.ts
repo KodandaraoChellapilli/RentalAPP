@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { requireOwner } from "@/lib/api/access";
-import { fail, json, options, requireApiUser } from "@/lib/api/http";
+import { fail, json, options, publicOrigin, requireApiUser } from "@/lib/api/http";
 import { equipmentSummary, eventJson, rentalJson } from "@/lib/api/serialize";
 import { formatDuration, formatMoney } from "@/lib/billing";
 import { getOwnerDashboard } from "@/lib/queries/dashboard";
@@ -12,6 +12,7 @@ export function OPTIONS() {
 export async function GET(request: NextRequest) {
   try {
     requireOwner(await requireApiUser(request, ["ADMIN"]));
+    const origin = publicOrigin(request);
     const data = await getOwnerDashboard();
     return json({
       counts: data.counts,
@@ -27,8 +28,8 @@ export async function GET(request: NextRequest) {
       activeRentals: data.activeRentals.map((rental) => rentalJson(rental)),
       todayEvents: data.todayEvents.map(eventJson),
       openEvents: data.openEvents.map(eventJson),
-      availableEquipment: data.availableEquipment.map(equipmentSummary),
-      needingAttention: data.needingAttention.map(equipmentSummary),
+      availableEquipment: data.availableEquipment.map((item) => equipmentSummary(item, origin)),
+      needingAttention: data.needingAttention.map((item) => equipmentSummary(item, origin)),
       employees: data.employees.map((employee) => ({
         ...employee,
         todayLabel: formatDuration(employee.todayMs),

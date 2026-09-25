@@ -40,11 +40,7 @@ export default function CustomerRentals() {
 
   return (
     <Screen onRefresh={load} refreshing={refreshing}>
-      <Title
-        kicker="Your company"
-        title={welcomeTitle(user?.name, "My equipment")}
-        subtitle="Only your company’s rentals are shown here. Other customers never appear in this list."
-      />
+      <Title title={welcomeTitle(user?.name, "My equipment")} subtitle="Your current and past rentals." />
       <ErrorText message={error} />
 
       <SectionTitle title="On rent / scheduled" subtitle="Amounts stay estimated until pickup is completed." />

@@ -36,7 +36,7 @@ export function DeliveryForm({
       action={completeDelivery}
       message="Confirm the before-delivery photos show the equipment's initial condition? Completing delivery starts the rental and sets the equipment to Active / On Rent."
       confirmLabel="Complete delivery"
-      className="card space-y-5 p-6"
+      className="card space-y-5 p-4"
     >
       {eventId ? <input type="hidden" name="eventId" value={eventId} /> : null}
       {rentalId ? <input type="hidden" name="rentalId" value={rentalId} /> : null}

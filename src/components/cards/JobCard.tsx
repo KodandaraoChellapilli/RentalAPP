@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { EVENT_TYPE_LABELS, type EventType } from "@/lib/constants";
+import { TypeBadge } from "@/components/StatusBadge";
 import { cn, formatDateTime } from "@/lib/utils";
 
 export type JobCardData = {
@@ -15,6 +16,7 @@ export type JobCardData = {
   href?: string;
   overdue?: boolean;
   actionLabel?: string;
+  featured?: boolean;
 };
 
 export function JobCard({
@@ -29,30 +31,37 @@ export function JobCard({
   href,
   overdue,
   actionLabel,
+  featured,
 }: JobCardData) {
   const heading = equipmentLabel || title || EVENT_TYPE_LABELS[type as EventType] || type;
   const isOverdue = overdue ?? new Date(startAt) < new Date();
   const content = (
     <>
-      <div className="flex items-start justify-between gap-3">
-        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-stone-500">
-          {EVENT_TYPE_LABELS[type as EventType] || type}
-        </p>
-        {isOverdue ? <span className="text-xs font-medium text-orange-700">Overdue</span> : null}
+      <div className="flex items-center justify-between gap-3">
+        <TypeBadge type={type} />
+        {featured ? (
+          <span className="text-xs font-medium text-stone-500">Up next</span>
+        ) : isOverdue ? (
+          <span className="text-xs font-medium text-orange-800">Overdue</span>
+        ) : null}
       </div>
-      <p className="mt-1 font-semibold text-stone-900">{heading}</p>
+      <p className="mt-2 truncate font-semibold text-stone-900">{heading}</p>
       <p className="mt-1 text-sm text-stone-600">{formatDateTime(startAt)}</p>
-      {customerName ? <p className="text-sm text-stone-600">{customerName}</p> : null}
-      {destination ? <p className="text-sm text-stone-500">{destination}</p> : null}
+      {customerName ? <p className="truncate text-sm text-stone-600">{customerName}</p> : null}
+      {destination ? <p className="truncate text-sm text-stone-500">{destination}</p> : null}
       {rateLabel ? <p className="text-sm text-stone-600">{rateLabel}</p> : null}
       {employeeName !== undefined ? (
-        <p className="text-sm text-stone-500">{employeeName ? `Assigned: ${employeeName}` : "Unassigned"}</p>
+        <p className="text-sm text-stone-500">{employeeName || "Unassigned"}</p>
       ) : null}
-      {actionLabel ? <p className="mt-3 text-sm font-medium text-orange-700">{actionLabel}</p> : null}
+      {actionLabel ? (
+        <span className={featured ? "btn btn-primary mt-3 w-full" : "mt-3 inline-block text-sm font-medium text-orange-800"}>
+          {actionLabel}
+        </span>
+      ) : null}
     </>
   );
 
-  const className = cn("card p-4", href && "block transition hover:-translate-y-0.5 hover:border-orange-300 hover:shadow-md");
+  const className = cn("card p-4", href && "block hover:bg-stone-50", featured && "border-stone-400");
   if (href) {
     return (
       <Link href={href} className={className}>

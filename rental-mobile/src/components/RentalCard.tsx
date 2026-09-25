@@ -40,7 +40,13 @@ export function RentalCard({
           : `Returned ${formatWhen(rental.endAt)}`}
       </Text>
       {rental.destination ? <Text style={cardStyles.cardMeta}>{rental.destination}</Text> : null}
-      <Text style={cardStyles.cardCta}>View details →</Text>
+      {rental.canRequestPickup ? (
+        <Text style={cardStyles.cardCta}>Request pickup</Text>
+      ) : rental.canConfirmDelivery ? (
+        <Text style={cardStyles.cardCta}>Confirm delivery</Text>
+      ) : (
+        <Text style={cardStyles.cardCta}>View details</Text>
+      )}
     </StripeCard>
   );
 }

@@ -21,7 +21,7 @@ export default async function CustomerRentalsPage() {
 
   return (
     <div>
-      <PageHeader title="My equipment" subtitle="Only your company's rentals are shown. Active amounts are estimated until pickup." />
+      <PageHeader title="My equipment" subtitle="Your current and past rentals." />
       <h2 className="mb-3 font-semibold">On rent</h2>
       {active.length === 0 ? (
         <EmptyState title="Nothing out right now" body="When equipment is delivered to your jobsite, it will appear here with a live estimated charge." />

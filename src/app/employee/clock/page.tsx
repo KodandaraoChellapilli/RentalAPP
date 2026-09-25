@@ -41,11 +41,9 @@ export default async function ClockPage({
       <PageHeader title="Time clock" subtitle="Work hours are separate from deliveries and pickups." />
       <ErrorBanner message={error} />
       <div className="card overflow-hidden">
-        <div className={`px-6 py-4 ${open ? "bg-emerald-700 text-white" : "bg-[#14110e] text-white"}`}>
-          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-white/70">
-            {open ? "Clocked in" : "Not clocked in"}
-          </p>
-          <p className="mt-2 text-4xl font-semibold">
+        <div className={`px-5 py-4 ${open ? "bg-emerald-800 text-white" : "bg-stone-900 text-white"}`}>
+          <p className="text-sm text-white/70">{open ? "Clocked in" : "Not clocked in"}</p>
+          <p className="mt-1 text-2xl font-semibold tabular-nums">
             {open ? (
               <LiveDuration startAt={open.clockIn} running asOf={asOf} />
             ) : (

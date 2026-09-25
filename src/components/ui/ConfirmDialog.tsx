@@ -16,14 +16,14 @@ export function ConfirmDialog({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onMouseDown={onCancel}>
       <div
-        className="w-full max-w-sm overflow-hidden rounded-2xl bg-white shadow-2xl"
+        className="w-full max-w-sm overflow-hidden rounded bg-white shadow-lg"
         onMouseDown={(event) => event.stopPropagation()}
       >
-        <div className="bg-[#14110e] px-6 py-5 text-white">
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-amber-400">Confirm</p>
-          <p className="mt-2 text-lg">{message}</p>
+        <div className="px-5 py-4">
+          <p className="text-sm font-semibold text-stone-900">Confirm</p>
+          <p className="mt-1 text-sm text-stone-600">{message}</p>
         </div>
-        <div className="flex justify-end gap-3 border-t border-stone-100 px-6 py-4">
+        <div className="flex justify-end gap-2 border-t border-stone-200 px-5 py-3">
           <button className="btn btn-ghost" type="button" onClick={onCancel}>
             Cancel
           </button>

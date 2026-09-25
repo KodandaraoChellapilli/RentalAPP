@@ -10,7 +10,7 @@ import {
   type ViewStyle,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { colors, radius, shadow, space, statusColor, statusLabel, type } from "../theme";
+import { colors, radius, scale, space, statusColor, statusLabel, typeScale } from "../theme";
 import { OfflineBanner } from "./OfflineBanner";
 
 export function Screen({
@@ -105,9 +105,9 @@ export function Button({
 }) {
   const background =
     variant === "dark"
-      ? colors.ink
+      ? colors.button
       : variant === "ghost"
-        ? colors.surface
+        ? colors.outlineButtonBg ?? colors.surface
         : variant === "danger"
           ? colors.danger
           : colors.accent;
@@ -122,8 +122,8 @@ export function Button({
         {
           backgroundColor: background,
           borderWidth: variant === "ghost" ? 1 : 0,
-          borderColor: colors.line,
-          opacity: disabled || pending ? 0.5 : pressed ? 0.88 : 1,
+          borderColor: variant === "ghost" ? colors.border : "transparent",
+          opacity: disabled || pending ? 0.45 : pressed ? 0.88 : 1,
         },
       ]}
     >
@@ -230,47 +230,44 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     paddingHorizontal: space.screen,
     paddingTop: 12,
-    ...shadow.card,
   },
   kicker: {
-    color: colors.accent,
-    fontSize: type.kicker,
-    fontWeight: "700",
-    letterSpacing: 1.2,
-    textTransform: "uppercase",
-    marginBottom: 4,
+    color: colors.muted,
+    fontSize: typeScale.kicker,
+    fontWeight: "600",
+    marginBottom: 2,
   },
   titleWrap: { marginBottom: space.md },
-  title: { fontSize: type.title, fontWeight: "700", color: colors.ink, letterSpacing: -0.3, lineHeight: 32 },
-  subtitle: { marginTop: 6, color: colors.muted, fontSize: type.subtitle, lineHeight: 21 },
+  title: { fontSize: typeScale.title, fontWeight: "700", color: colors.ink, letterSpacing: -0.4, lineHeight: scale(32) },
+  subtitle: { marginTop: 6, color: colors.muted, fontSize: typeScale.subtitle, lineHeight: scale(20) },
   sectionWrap: { marginTop: space.sm, marginBottom: space.sm },
-  sectionTitle: { fontSize: 18, fontWeight: "700", color: colors.ink },
-  sectionSub: { marginTop: 4, color: colors.muted, fontSize: type.subtitle, lineHeight: 20 },
+  sectionTitle: { fontSize: scale(16), fontWeight: "700", color: colors.ink },
+  sectionSub: { marginTop: 2, color: colors.muted, fontSize: typeScale.subtitle, lineHeight: scale(20) },
   card: {
     backgroundColor: colors.surface,
     borderColor: colors.line,
     borderWidth: 1,
-    borderRadius: radius.lg,
-    padding: space.md,
-    marginBottom: 12,
-    ...shadow.card,
+    borderRadius: radius.md,
+    padding: scale(14),
+    marginBottom: scale(12),
   },
   button: {
-    minHeight: 52,
-    borderRadius: radius.md,
+    minHeight: scale(50),
+    borderRadius: radius.sm,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: space.md,
+    paddingHorizontal: scale(16),
+    paddingVertical: scale(14),
   },
-  buttonText: { fontWeight: "700", fontSize: 16 },
+  buttonText: { fontWeight: "700", fontSize: scale(16) },
   badge: {
     alignSelf: "flex-start",
     borderWidth: 1,
-    borderRadius: radius.pill,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    borderRadius: scale(8),
+    paddingHorizontal: 8,
+    paddingVertical: 3,
   },
-  badgeText: { fontSize: type.caption, fontWeight: "700" },
+  badgeText: { fontSize: typeScale.caption, fontWeight: "700" },
   emptyCard: { borderStyle: "dashed", backgroundColor: colors.bg },
   emptyTitle: { fontSize: 16, fontWeight: "700", color: colors.ink, marginBottom: 4 },
   error: {
@@ -287,16 +284,14 @@ const styles = StyleSheet.create({
   },
   errorText: { color: colors.danger, fontWeight: "700" },
   errorOfflineText: { color: colors.warning },
-  errorBody: { color: colors.danger, marginTop: 4, lineHeight: 18, fontSize: type.subtitle },
+  errorBody: { color: colors.danger, marginTop: 4, lineHeight: 18, fontSize: typeScale.subtitle },
   stat: { flex: 1, minWidth: "45%", marginBottom: 12 },
   statLabel: {
     color: colors.muted,
-    fontSize: type.kicker,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.6,
+    fontSize: typeScale.kicker,
+    fontWeight: "600",
   },
-  statValue: { fontSize: 22, fontWeight: "700", color: colors.ink, marginTop: 4 },
+  statValue: { fontSize: 20, fontWeight: "700", color: colors.ink, marginTop: 4 },
   loading: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bg, gap: 12 },
   loadingText: { color: colors.muted, fontWeight: "600" },
   row: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 4 },

@@ -11,9 +11,9 @@ export function PageHeader({
   action?: { href: string; label: string };
 }) {
   return (
-    <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+    <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
       <div>
-        <h2 className="text-2xl font-semibold tracking-tight text-stone-900">{title}</h2>
+        <h1 className="text-xl font-semibold text-stone-900">{title}</h1>
         {subtitle ? <p className="mt-1 max-w-2xl text-sm text-stone-500">{subtitle}</p> : null}
       </div>
       {action ? (
@@ -52,7 +52,7 @@ export function SuccessBanner({ message }: { message?: string }) {
 
 export function EmptyState({ title, body }: { title: string; body: string }) {
   return (
-    <div className="card px-6 py-10 text-center">
+    <div className="card px-5 py-8 text-center">
       <p className="font-semibold text-stone-800">{title}</p>
       <p className="mt-1 text-sm text-stone-500">{body}</p>
     </div>

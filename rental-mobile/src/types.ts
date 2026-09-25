@@ -31,6 +31,7 @@ export type Equipment = {
   rateLabel: string;
   notes?: string | null;
   label: string;
+  photoUrl?: string | null;
   customerName?: string | null;
   latestJobId?: string;
   latestJobType?: string;
@@ -48,6 +49,7 @@ export type Photo = {
   type: string;
   label: string;
   url: string;
+  path?: string;
   takenAt: string | null;
   notes?: string | null;
   uploadedByName?: string | null;

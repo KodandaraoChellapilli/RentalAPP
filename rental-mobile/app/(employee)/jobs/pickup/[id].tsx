@@ -18,7 +18,7 @@ import { successFeedback, tapFeedback, warnFeedback } from "../../../../src/lib/
 import { colors } from "../../../../src/theme";
 import type { Job, LocalPhoto, Photo, Rental } from "../../../../src/types";
 
-const STEPS = ["Compare", "Damage", "Photos", "Complete"];
+const STEPS = ["Job", "Inspect", "Photos", "Complete"];
 
 export default function PickupScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -145,10 +145,7 @@ export default function PickupScreen() {
       }
     >
       <Stepper steps={STEPS} current={step} />
-      <Title
-        title="Pickup inspection"
-        subtitle="Compare against the before photos. Damage cannot mark the machine Available."
-      />
+      <Title title="Pickup" subtitle="Photograph the return and note any damage." />
       <ErrorText message={error} />
       <Card>
         <Badge status="PICKUP" />

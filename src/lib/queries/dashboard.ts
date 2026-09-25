@@ -6,7 +6,10 @@ export async function getOwnerDashboard() {
   const todayStart = startOfToday();
   const todayEnd = endOfToday();
   const [equipment, activeRentals, completedRentals, openEvents, todayEvents, employees] = await Promise.all([
-    prisma.equipment.findMany({ orderBy: { number: "asc" } }),
+    prisma.equipment.findMany({
+      orderBy: { number: "asc" },
+      include: { photos: { orderBy: { takenAt: "desc" }, take: 1 } },
+    }),
     prisma.rental.findMany({
       where: { status: { in: ["ACTIVE", "SCHEDULED"] } },
       include: { equipment: true, customer: true },

@@ -72,9 +72,7 @@ export function RentalsTable({
               setStatus(tab.value);
               setPage(1);
             }}
-            className={`rounded-full px-3 py-1.5 text-sm font-medium ${
-              status === tab.value ? "bg-stone-900 text-white" : "bg-white text-stone-600 ring-1 ring-stone-200"
-            }`}
+            className={`filter-chip ${status === tab.value ? "filter-chip-on" : ""}`}
           >
             {tab.label}
           </button>

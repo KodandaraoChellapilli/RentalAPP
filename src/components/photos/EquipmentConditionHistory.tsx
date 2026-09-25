@@ -2,7 +2,6 @@ import { AfterPickupPhotos } from "@/components/photos/AfterPickupPhotos";
 import { BeforeDeliveryPhotos } from "@/components/photos/BeforeDeliveryPhotos";
 import { LiveCharge } from "@/components/LiveCharge";
 import { StatusBadge } from "@/components/StatusBadge";
-import { Panel } from "@/components/ui/Panel";
 import { formatDuration, formatRate } from "@/lib/billing";
 import type { PhotoView } from "@/lib/photo-labels";
 import { formatDate, formatDateTime } from "@/lib/utils";
@@ -34,15 +33,13 @@ function firstEmployee(photos: PhotoView[], event?: HistoryEvent) {
 }
 
 function firstNotes(photos: PhotoView[], event?: HistoryEvent, fallback?: string | null) {
-  return photos[0]?.notes || event?.notes || fallback || "No condition notes recorded.";
+  return photos[0]?.notes || event?.notes || fallback || "None";
 }
 
-function damageStatus(notes: string | null | undefined) {
-  if (!notes) return { label: "No damage reported", tone: "text-emerald-800 bg-emerald-50 border-emerald-200" };
-  if (notes.includes("[Damage or issue reported]")) {
-    return { label: "Damage or issue reported", tone: "text-amber-900 bg-amber-50 border-amber-200" };
-  }
-  return { label: "Condition noted", tone: "text-stone-700 bg-stone-50 border-stone-200" };
+function damageLabel(notes: string | null | undefined) {
+  if (!notes) return "No damage reported";
+  if (notes.includes("[Damage or issue reported]")) return "Damage or issue reported";
+  return "Condition noted";
 }
 
 export function EquipmentConditionHistory({
@@ -54,127 +51,124 @@ export function EquipmentConditionHistory({
   equipmentName: string;
   rentals: HistoryRental[];
 }) {
-  const allPhotos = rentals.flatMap((rental) => rental.photos);
-  const beforeCount = allPhotos.filter((photo) => photo.type === "DELIVERY").length;
-  const afterCount = allPhotos.filter((photo) => photo.type === "PICKUP").length;
-
   return (
-    <section className="space-y-6">
-      <Panel
-        title="Rental history"
-        subtitle={`#${equipmentNumber} ${equipmentName}. Each rental includes the customer, rate, employees, condition notes, and before/after photos.`}
-      >
-        <div className="grid grid-cols-2 gap-3 text-sm">
-          <div className="rounded-xl border border-orange-200 bg-orange-50 px-4 py-3">
-            <p className="text-[11px] font-bold uppercase tracking-wide text-orange-800">Before delivery</p>
-            <p className="mt-1 text-2xl font-semibold tabular-nums">{beforeCount}</p>
-            <p className="text-xs text-stone-600">Initial condition photos</p>
-          </div>
-          <div className="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3">
-            <p className="text-[11px] font-bold uppercase tracking-wide text-sky-800">After pickup</p>
-            <p className="mt-1 text-2xl font-semibold tabular-nums">{afterCount}</p>
-            <p className="text-xs text-stone-600">Return condition photos</p>
-          </div>
-        </div>
-      </Panel>
+    <section>
+      <div className="mb-3">
+        <h2 className="font-semibold text-stone-900">Rental history</h2>
+        <p className="mt-0.5 text-sm text-stone-500">
+          #{equipmentNumber} {equipmentName}
+        </p>
+      </div>
 
       {rentals.length === 0 ? (
-        <div className="card px-6 py-10 text-center text-sm text-stone-500">
-          No rental condition history yet. Completing a delivery with before photos starts this record.
+        <div className="card px-4 py-8 text-center text-sm text-stone-500">
+          No rental history yet. Completing a delivery with before photos starts this record.
         </div>
       ) : (
-        rentals.map((rental) => {
-          const before = rental.photos.filter((photo) => photo.type === "DELIVERY");
-          const after = rental.photos.filter((photo) => photo.type === "PICKUP");
-          const delivery = rental.events?.find((event) => event.type === "DELIVERY");
-          const pickup = rental.events?.find((event) => event.type === "PICKUP");
-          const afterNotes = firstNotes(after, pickup, rental.notes);
-          const damage = damageStatus(afterNotes);
+        <div className="space-y-3">
+          {rentals.map((rental) => {
+            const before = rental.photos.filter((photo) => photo.type === "DELIVERY");
+            const after = rental.photos.filter((photo) => photo.type === "PICKUP");
+            const delivery = rental.events?.find((event) => event.type === "DELIVERY");
+            const pickup = rental.events?.find((event) => event.type === "PICKUP");
+            const afterNotes = firstNotes(after, pickup, rental.notes);
+            const durationMs =
+              rental.startAt
+                ? (rental.endAt ? new Date(rental.endAt).getTime() : new Date(rental.startAt).getTime()) -
+                  new Date(rental.startAt).getTime()
+                : 0;
 
-          return (
-            <article key={rental.id} className="card overflow-hidden">
-              <div className="flex flex-wrap items-start justify-between gap-3 border-b border-stone-100 px-5 py-4">
-                <div>
-                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-orange-700">Rental history</p>
-                  <h3 className="mt-1 text-lg font-semibold text-stone-900">{rental.customer.name}</h3>
-                  <p className="text-sm text-stone-500">
-                    {formatDate(rental.startAt)} → {formatDate(rental.endAt)}
-                    {rental.destination ? ` · ${rental.destination}` : ""}
-                  </p>
-                  {rental.rateSnapshot != null && rental.billingUnitSnapshot ? (
-                    <p className="mt-1 text-sm text-stone-600">
-                      Rate: {formatRate(rental.rateSnapshot, rental.billingUnitSnapshot)}
-                      {rental.startAt
-                        ? ` · Duration: ${formatDuration(
-                            (rental.endAt ? new Date(rental.endAt).getTime() : new Date(rental.startAt).getTime()) -
-                              new Date(rental.startAt).getTime(),
-                          )}`
+            return (
+              <article key={rental.id} className="card overflow-hidden">
+                <div className="flex flex-wrap items-start justify-between gap-3 border-b border-stone-200/80 px-4 py-3">
+                  <div className="min-w-0">
+                    <h3 className="truncate font-semibold text-stone-900">{rental.customer.name}</h3>
+                    <p className="text-sm text-stone-500">
+                      {formatDate(rental.startAt)} → {formatDate(rental.endAt)}
+                      {durationMs ? ` · ${formatDuration(durationMs)}` : ""}
+                      {rental.rateSnapshot != null && rental.billingUnitSnapshot
+                        ? ` · ${formatRate(rental.rateSnapshot, rental.billingUnitSnapshot)}`
                         : ""}
                     </p>
-                  ) : null}
-                </div>
-                <StatusBadge kind="rental" status={rental.status} />
-              </div>
-              <div className="grid gap-0 lg:grid-cols-2">
-                <div className="border-b border-stone-100 p-5 lg:border-b-0 lg:border-r">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-orange-800">Initial condition</p>
-                  <h4 className="mt-1 text-lg font-semibold text-stone-900">Before Delivery</h4>
-                  <p className="mt-1 text-sm text-stone-600">This documents the equipment before the customer receives it.</p>
-                  <div className="mt-3 space-y-1 text-sm text-stone-600">
-                    <p>Date: {formatDateTime(rental.startAt || delivery?.completedAt)}</p>
-                    <p>Delivered by: {firstEmployee(before, delivery)}</p>
-                    <p>Customer: {rental.customer.name}</p>
-                    <p>Condition notes: {firstNotes(before, delivery)}</p>
+                    {rental.destination ? <p className="truncate text-sm text-stone-500">{rental.destination}</p> : null}
                   </div>
-                  <div className="mt-4">
-                    <BeforeDeliveryPhotos
-                      photos={before}
-                      showHeading={false}
-                      empty="Before-delivery photos are required. None are attached to this rental yet."
-                    />
+                  <div className="text-right">
+                    <StatusBadge kind="rental" status={rental.status} />
+                    {rental.rateSnapshot != null && rental.billingUnitSnapshot ? (
+                      <p className="mt-1">
+                        <LiveCharge
+                          compact
+                          asOf={Date.now()}
+                          startAt={rental.startAt}
+                          endAt={rental.endAt}
+                          rate={rental.rateSnapshot}
+                          unit={rental.billingUnitSnapshot}
+                          status={rental.status}
+                          finalAmount={rental.finalAmount}
+                        />
+                      </p>
+                    ) : null}
                   </div>
                 </div>
-                <div className="bg-sky-50/40 p-5">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-sky-800">Return condition</p>
-                  <h4 className="mt-1 text-lg font-semibold text-stone-900">After Pickup</h4>
-                  <p className="mt-1 text-sm text-stone-600">This documents the equipment after the customer returns it.</p>
-                  <div className="mt-3 space-y-1 text-sm text-stone-600">
-                    <p>Date: {formatDateTime(rental.endAt || pickup?.completedAt)}</p>
-                    <p>Picked up by: {firstEmployee(after, pickup)}</p>
-                    <p>Customer: {rental.customer.name}</p>
-                    <p>Condition notes: {afterNotes}</p>
-                    <p>
-                      <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${damage.tone}`}>
-                        {damage.label}
-                      </span>
-                    </p>
+
+                <div className="grid gap-0 lg:grid-cols-2">
+                  <div className="border-b border-stone-200/80 p-4 lg:border-b-0 lg:border-r">
+                    <p className="text-sm font-semibold text-stone-900">Delivery</p>
+                    <dl className="mt-2 space-y-1 text-sm text-stone-600">
+                      <div className="flex justify-between gap-3">
+                        <dt className="text-stone-500">When</dt>
+                        <dd>{formatDateTime(rental.startAt || delivery?.completedAt)}</dd>
+                      </div>
+                      <div className="flex justify-between gap-3">
+                        <dt className="text-stone-500">Employee</dt>
+                        <dd className="truncate">{firstEmployee(before, delivery)}</dd>
+                      </div>
+                      <div className="flex justify-between gap-3">
+                        <dt className="text-stone-500">Notes</dt>
+                        <dd className="max-w-[70%] text-right">{firstNotes(before, delivery)}</dd>
+                      </div>
+                    </dl>
+                    <div className="mt-3">
+                      <BeforeDeliveryPhotos
+                        photos={before}
+                        showHeading={false}
+                        empty="No before photos yet."
+                      />
+                    </div>
                   </div>
-                  <div className="mt-4">
-                    <AfterPickupPhotos
-                      photos={after}
-                      showHeading={false}
-                      empty="After-pickup photos will appear when this rental is returned."
-                    />
+                  <div className="p-4">
+                    <p className="text-sm font-semibold text-stone-900">Pickup</p>
+                    <dl className="mt-2 space-y-1 text-sm text-stone-600">
+                      <div className="flex justify-between gap-3">
+                        <dt className="text-stone-500">When</dt>
+                        <dd>{formatDateTime(rental.endAt || pickup?.completedAt)}</dd>
+                      </div>
+                      <div className="flex justify-between gap-3">
+                        <dt className="text-stone-500">Employee</dt>
+                        <dd className="truncate">{firstEmployee(after, pickup)}</dd>
+                      </div>
+                      <div className="flex justify-between gap-3">
+                        <dt className="text-stone-500">Damage</dt>
+                        <dd>{damageLabel(afterNotes)}</dd>
+                      </div>
+                      <div className="flex justify-between gap-3">
+                        <dt className="text-stone-500">Notes</dt>
+                        <dd className="max-w-[70%] text-right">{afterNotes}</dd>
+                      </div>
+                    </dl>
+                    <div className="mt-3">
+                      <AfterPickupPhotos
+                        photos={after}
+                        showHeading={false}
+                        empty="After photos appear when pickup is completed."
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-              {rental.rateSnapshot != null && rental.billingUnitSnapshot ? (
-                <div className="border-t border-stone-100 px-5 py-4">
-                  <LiveCharge
-                    compact
-                    asOf={Date.now()}
-                    startAt={rental.startAt}
-                    endAt={rental.endAt}
-                    rate={rental.rateSnapshot}
-                    unit={rental.billingUnitSnapshot}
-                    status={rental.status}
-                    finalAmount={rental.finalAmount}
-                  />
-                </div>
-              ) : null}
-            </article>
-          );
-        })
+              </article>
+            );
+          })}
+        </div>
       )}
     </section>
   );

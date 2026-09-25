@@ -24,10 +24,13 @@ export default function EmployeeLayout() {
         options={{
           title: "Transports",
           headerShown: false,
-          tabBarIcon: tabIcon("briefcase-outline"),
+          tabBarIcon: tabIcon("car-outline"),
         }}
       />
-      <Tabs.Screen name="equipment" options={{ title: "Equipment", tabBarIcon: tabIcon("construct-outline") }} />
+      <Tabs.Screen
+        name="equipment"
+        options={{ title: "Equipment", headerShown: false, tabBarIcon: tabIcon("construct-outline") }}
+      />
     </Tabs>
   );
 }

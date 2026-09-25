@@ -3,6 +3,7 @@ import { useFocusEffect, useNavigation, useRouter, type Href } from "expo-router
 import { Empty, ErrorText, Loading, Screen, Title } from "../../../src/components/ui";
 import { EquipmentCard } from "../../../src/components/EquipmentCard";
 import { FilterChips } from "../../../src/components/FilterChips";
+import { SearchBar } from "../../../src/components/SearchBar";
 import { SignOutButton } from "../../../src/components/SignOutButton";
 import { api } from "../../../src/lib/api";
 import { friendlyError } from "../../../src/lib/errors";
@@ -15,6 +16,7 @@ export default function OwnerEquipment() {
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState("ALL");
+  const [query, setQuery] = useState("");
 
   useLayoutEffect(() => {
     navigation.setOptions({ headerRight: () => <SignOutButton /> });
@@ -22,7 +24,7 @@ export default function OwnerEquipment() {
 
   const load = useCallback(async () => {
     setRefreshing(true);
-    try {
+      try {
       const data = await api<{ equipment: Equipment[] }>("/api/equipment");
       setItems(data.equipment);
       setError(null);
@@ -47,14 +49,22 @@ export default function OwnerEquipment() {
     return next;
   }, [items]);
 
-  const filtered = filter === "ALL" ? items : items.filter((item) => item.status === filter);
+  const filtered = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    return items.filter((item) => {
+      if (filter !== "ALL" && item.status !== filter) return false;
+      if (!needle) return true;
+      return `${item.number} ${item.name} ${item.type} ${item.label}`.toLowerCase().includes(needle);
+    });
+  }, [items, filter, query]);
 
   if (!items.length && !error && refreshing) return <Loading />;
 
   return (
     <Screen onRefresh={load} refreshing={refreshing}>
-      <Title title="Fleet" subtitle="Tap a machine for condition history, current rental, and before/after photos." />
+      <Title title="Equipment" subtitle="Condition history, current rental, and before/after photos." />
       <ErrorText message={error} />
+      <SearchBar value={query} onChange={setQuery} placeholder="Search equipment" />
       <FilterChips
         value={filter}
         onChange={setFilter}
@@ -68,8 +78,8 @@ export default function OwnerEquipment() {
       />
       {filtered.length === 0 ? (
         <Empty
-          title={items.length === 0 ? "No equipment" : "Nothing in this filter"}
-          body={items.length === 0 ? "Add machines on the website." : "Try another status chip."}
+          title={items.length === 0 ? "No equipment" : "Nothing matches"}
+          body={items.length === 0 ? "Add machines on the website." : "Try another search or status."}
         />
       ) : (
         filtered.map((item) => (

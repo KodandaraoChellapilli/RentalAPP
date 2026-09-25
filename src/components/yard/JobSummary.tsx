@@ -16,9 +16,9 @@ export function JobSummary({
   extra?: ReactNode;
 }) {
   return (
-    <section className="card mb-4 p-5">
-      <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-orange-700">{title}</p>
-      <h2 className="mt-1 text-xl font-semibold text-stone-900">
+    <section className="card mb-4 p-4">
+      <p className="text-sm font-medium text-stone-500">{title}</p>
+      <h2 className="mt-0.5 text-lg font-semibold text-stone-900">
         {number ? `#${number} ${name}` : name || "Select equipment"}
       </h2>
       <div className="mt-3 grid gap-1 text-sm text-stone-600">

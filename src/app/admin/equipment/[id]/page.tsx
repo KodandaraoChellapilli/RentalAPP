@@ -41,52 +41,58 @@ export default async function EquipmentDetailPage({ params }: { params: Promise<
         subtitle={`${equipment.type} · ${formatRate(equipment.rate, equipment.billingUnit)}`}
         action={{ href: `/admin/equipment/${equipment.id}/edit`, label: "Edit" }}
       />
-      <div className="mb-6 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-        <section className="card p-5">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wide text-stone-500">Equipment information</p>
-              <p className="mt-1 text-sm text-stone-600">Type: {equipment.type}</p>
-              <p className="text-sm text-stone-600">Rate: {formatRate(equipment.rate, equipment.billingUnit)}</p>
+      <div className="mb-5 grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
+        <section className="card overflow-hidden p-0">
+          {equipment.photos[0] ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={equipment.photos[0].path}
+              alt={`#${equipment.number} ${equipment.name}`}
+              className="h-56 w-full bg-stone-100 object-cover"
+            />
+          ) : null}
+          <div className="p-4">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-sm text-stone-600">{equipment.type}</p>
+                <p className="text-sm text-stone-600">{formatRate(equipment.rate, equipment.billingUnit)}</p>
+              </div>
+              <StatusBadge status={equipment.status} />
             </div>
-            <StatusBadge status={equipment.status} />
+            {equipment.notes ? <p className="mt-3 text-sm text-stone-600">{equipment.notes}</p> : null}
+            {current ? (
+              <p className="mt-3 text-sm text-stone-700">
+                Current customer: <span className="font-medium">{current.customer.name}</span>
+              </p>
+            ) : (
+              <p className="mt-3 text-sm text-stone-500">No current rental.</p>
+            )}
           </div>
-          <p className="mt-4 text-sm text-stone-600">
-            {equipment.notes || "No description or maintenance notes yet."}
-          </p>
-          {current ? (
-            <p className="mt-3 text-sm text-stone-700">
-              Current customer: <span className="font-medium">{current.customer.name}</span>
-            </p>
-          ) : (
-            <p className="mt-3 text-sm text-stone-500">No current rental.</p>
-          )}
         </section>
-        <section className="card p-5">
-          <p className="text-xs font-bold uppercase tracking-wide text-stone-500">History snapshot</p>
-          <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+        <section className="card p-4 text-sm">
+          <dl className="grid grid-cols-2 gap-x-4 gap-y-2">
             <div>
-              <p className="text-stone-500">Rentals</p>
-              <p className="text-2xl font-semibold">{equipment.rentals.length}</p>
+              <dt className="text-stone-500">Rentals</dt>
+              <dd className="font-semibold tabular-nums">{equipment.rentals.length}</dd>
             </div>
             <div>
-              <p className="text-stone-500">Photos</p>
-              <p className="text-2xl font-semibold">{equipment.photos.length}</p>
+              <dt className="text-stone-500">Photos</dt>
+              <dd className="font-semibold tabular-nums">{equipment.photos.length}</dd>
             </div>
             <div>
-              <p className="text-stone-500">Deliveries</p>
-              <p className="text-2xl font-semibold">{equipment.events.filter((event) => event.type === "DELIVERY").length}</p>
+              <dt className="text-stone-500">Deliveries</dt>
+              <dd className="font-semibold tabular-nums">{equipment.events.filter((event) => event.type === "DELIVERY").length}</dd>
             </div>
             <div>
-              <p className="text-stone-500">Pickups</p>
-              <p className="text-2xl font-semibold">{equipment.events.filter((event) => event.type === "PICKUP").length}</p>
+              <dt className="text-stone-500">Pickups</dt>
+              <dd className="font-semibold tabular-nums">{equipment.events.filter((event) => event.type === "PICKUP").length}</dd>
             </div>
-          </div>
+          </dl>
         </section>
       </div>
 
       {current ? (
-        <section className="card mb-6 p-5">
+        <section className="card mb-5 p-4">
           <h2 className="font-semibold">Current rental</h2>
           <div className="mt-4 grid gap-6 md:grid-cols-2">
             <div className="space-y-1 text-sm">

@@ -45,7 +45,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
 
     const current = equipment.rentals.find((rental) => rental.status === "ACTIVE" || rental.status === "SCHEDULED");
     return json({
-      equipment: equipmentSummary(equipment),
+      equipment: equipmentSummary(equipment, origin),
       currentRental: current ? rentalJson(current) : null,
       history: equipment.rentals.map((rental) => rentalHistoryJson(rental, origin)),
       photos: equipment.photos.map((photo) => photoJson(photo, origin)),

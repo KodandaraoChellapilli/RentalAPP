@@ -49,10 +49,10 @@ export default async function ReportsPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Reports" subtitle="Live rental charges, completed amounts, inventory mix, and crew hours." />
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard title="Estimated current charges" value={formatMoney(estimated)} subtitle={`${active.length} active rentals`} href="/admin/rentals" tone="accent" />
-        <StatCard title="Completed rental amounts" value={formatMoney(finals)} subtitle={`${completed.length} finished jobs`} href="/admin/rentals" tone="success" />
-        <StatCard title="Crew hours this week" value={formatDuration(weekMs)} subtitle="Separate from rental jobs" href="/admin/hours" />
+      <div className="ops-strip">
+        <StatCard title="Estimated charges" value={formatMoney(estimated)} subtitle={`${active.length} active rentals`} href="/admin/rentals" primary />
+        <StatCard title="Completed amounts" value={formatMoney(finals)} subtitle={`${completed.length} finished jobs`} href="/admin/rentals" />
+        <StatCard title="Crew hours this week" value={formatDuration(weekMs)} subtitle="Separate from rental time" href="/admin/hours" />
         <StatCard title="Machines" value={equipment.length} subtitle={`${byStatus.ON_RENT} on rent`} href="/admin/equipment" />
       </div>
 
@@ -60,7 +60,7 @@ export default async function ReportsPage() {
         <div className="grid gap-px bg-stone-100 sm:grid-cols-3">
           {Object.entries(byStatus).map(([status, count]) => (
             <div key={status} className="bg-white px-5 py-4">
-              <p className="text-xs font-bold uppercase tracking-wide text-stone-500">
+              <p className="text-xs font-medium text-stone-500">
                 {EQUIPMENT_STATUS_LABELS[status as EquipmentStatus] || status.replaceAll("_", " ")}
               </p>
               <p className="mt-1 text-2xl font-semibold tabular-nums">{count}</p>

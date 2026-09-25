@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Ridgeline Rentals",
+    "name": "West Ridge Rentals",
     "slug": "ridgeline-rentals",
     "scheme": "ridgeline",
     "version": "1.0.0",
@@ -14,19 +14,27 @@
     },
     "ios": {
       "supportsTablet": true,
+      "bundleIdentifier": "com.westridgerentals.app",
       "infoPlist": {
-        "NSCameraUsageDescription": "Ridgeline Rentals uses the camera to photograph equipment before delivery and after pickup.",
-        "NSPhotoLibraryUsageDescription": "Ridgeline Rentals uses your photo library so you can attach equipment condition photos."
+        "NSCameraUsageDescription": "West Ridge Rentals uses the camera to photograph equipment before delivery and after pickup.",
+        "NSPhotoLibraryUsageDescription": "West Ridge Rentals uses your photo library so you can attach equipment condition photos.",
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true,
+          "NSAllowsLocalNetworking": true
+        }
       }
     },
     "android": {
+      "package": "com.westridgerentals.app",
       "adaptiveIcon": {
         "backgroundColor": "#14110E",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "permissions": ["CAMERA", "READ_MEDIA_IMAGES"],
+      "permissions": ["CAMERA", "READ_MEDIA_IMAGES", "INTERNET"],
+      "usesCleartextTraffic": true,
+      "softwareKeyboardLayoutMode": "resize",
       "predictiveBackGestureEnabled": false
     },
     "web": {
@@ -39,8 +47,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Ridgeline Rentals uses photos to record equipment condition.",
-          "cameraPermission": "Ridgeline Rentals uses the camera to photograph equipment before delivery and after pickup."
+          "photosPermission": "West Ridge Rentals uses photos to record equipment condition.",
+          "cameraPermission": "West Ridge Rentals uses the camera to photograph equipment before delivery and after pickup."
         }
       ]
     ],

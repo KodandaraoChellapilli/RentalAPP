@@ -1,16 +1,13 @@
 import { Stack } from "expo-router";
 import { SignOutButton } from "../../../src/components/SignOutButton";
-import { colors } from "../../../src/theme";
+import { headerOptions } from "../../../src/theme";
 
 export default function JobsLayout() {
   return (
     <Stack
       screenOptions={{
-        headerStyle: { backgroundColor: colors.ink },
-        headerTintColor: colors.white,
-        headerTitleStyle: { fontWeight: "700" },
+        ...headerOptions,
         headerBackTitle: "Transports",
-        contentStyle: { backgroundColor: colors.bg, flex: 1 },
       }}
     >
       <Stack.Screen

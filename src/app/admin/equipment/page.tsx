@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 export default async function EquipmentListPage() {
   const equipment = await prisma.equipment.findMany({
     include: {
+      photos: { orderBy: { takenAt: "desc" }, take: 1 },
       rentals: {
         where: { status: { in: ["ACTIVE", "SCHEDULED"] } },
         include: { customer: true },
@@ -18,11 +19,7 @@ export default async function EquipmentListPage() {
 
   return (
     <div>
-      <PageHeader
-        title="Equipment"
-        subtitle="Every machine has a number, rate, status, and full history."
-        action={{ href: "/admin/equipment/new", label: "Add equipment" }}
-      />
+      <PageHeader title="Equipment" subtitle="Number, status, current customer, and rate." action={{ href: "/admin/equipment/new", label: "Add equipment" }} />
       <EquipmentCatalog
         items={equipment.map((item) => ({
           id: item.id,
@@ -35,6 +32,7 @@ export default async function EquipmentListPage() {
           billingUnit: item.billingUnit,
           currentCustomer: item.rentals[0]?.customer.name ?? null,
           currentRentalStatus: item.rentals[0]?.status ?? null,
+          photoPath: item.photos[0]?.path ?? null,
         }))}
       />
     </div>

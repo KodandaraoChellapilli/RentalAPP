@@ -32,22 +32,22 @@ export function RentalCard({
   const content = (
     <>
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-stone-500">#{number}</p>
-          <h3 className="text-lg font-semibold">{name}</h3>
+        <div className="min-w-0">
+          <p className="text-xs text-stone-500">#{number}</p>
+          <h3 className="truncate font-semibold">{name}</h3>
         </div>
         <StatusBadge kind="rental" status={status} />
       </div>
-      <p className="mt-3 text-sm text-stone-600">Started {formatDateTime(startAt)}</p>
-      <p className="text-sm text-stone-600">Scheduled pickup {formatDateTime(expectedPickupAt)}</p>
+      <p className="mt-2 text-sm text-stone-600">Started {formatDateTime(startAt)}</p>
+      <p className="text-sm text-stone-600">Pickup {formatDateTime(expectedPickupAt)}</p>
       <p className="text-sm text-stone-600">{formatRate(rate, unit)}</p>
-      <div className="mt-4">
-        <LiveCharge asOf={Date.now()} startAt={startAt} rate={rate} unit={unit} status={status} finalAmount={finalAmount} />
+      <div className="mt-3">
+        <LiveCharge compact asOf={Date.now()} startAt={startAt} rate={rate} unit={unit} status={status} finalAmount={finalAmount} />
       </div>
     </>
   );
 
-  const className = cn("card p-5", href && "block transition hover:-translate-y-0.5 hover:border-orange-300 hover:shadow-md");
+  const className = cn("card p-4", href && "block hover:bg-stone-50");
   if (href) {
     return (
       <Link href={href} className={className}>
@@ -71,8 +71,8 @@ export function RentalHistoryRow({
 }: RentalCardData) {
   const content = (
     <>
-      <div>
-        <p className="font-semibold">
+      <div className="min-w-0">
+        <p className="truncate font-medium">
           #{number} {name}
         </p>
         <p className="text-sm text-stone-500">
@@ -85,11 +85,11 @@ export function RentalHistoryRow({
 
   if (href) {
     return (
-      <Link href={href} className="flex items-center justify-between px-5 py-4 hover:bg-stone-50">
+      <Link href={href} className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-stone-50">
         {content}
       </Link>
     );
   }
 
-  return <div className="flex items-center justify-between px-5 py-4">{content}</div>;
+  return <div className="flex items-center justify-between gap-3 px-4 py-3">{content}</div>;
 }

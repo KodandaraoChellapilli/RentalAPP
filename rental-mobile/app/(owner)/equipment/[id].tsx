@@ -3,16 +3,19 @@ import { Text, View } from "react-native";
 import { useFocusEffect, useLocalSearchParams, useNavigation } from "expo-router";
 import { Badge, Button, Card, Empty, ErrorText, Loading, Screen, Title } from "../../../src/components/ui";
 import { PhotoGrid } from "../../../src/components/PhotoGrid";
+import { RemoteImage } from "../../../src/components/RemoteImage";
 import { api } from "../../../src/lib/api";
 import { friendlyError } from "../../../src/lib/errors";
 import { formatWhen } from "../../../src/lib/format";
-import { colors } from "../../../src/theme";
+import { conditionPhotos } from "../../../src/lib/photos";
+import { colors, radius } from "../../../src/theme";
 import type { Equipment, Photo, Rental } from "../../../src/types";
 
 type Detail = {
   equipment: Equipment;
   currentRental: Rental | null;
   history: Array<Rental & { photos?: Photo[] }>;
+  photos?: Photo[];
 };
 
 export default function EquipmentDetail() {
@@ -66,6 +69,13 @@ export default function EquipmentDetail() {
     <Screen onRefresh={load} refreshing={refreshing}>
       <Title title={data.equipment.label} subtitle={`${data.equipment.type} · ${data.equipment.rateLabel}`} />
       <ErrorText message={error} />
+      {data.photos?.[0] || data.equipment.photoUrl ? (
+        <RemoteImage
+          uri={data.photos?.[0]?.url || data.equipment.photoUrl}
+          style={{ width: "100%", height: 180, borderRadius: radius.md, marginBottom: 12 }}
+          accessibilityLabel={`${data.equipment.label} photo`}
+        />
+      ) : null}
       <View style={{ marginBottom: 12 }}>
         <Badge status={data.equipment.status} />
       </View>
@@ -91,13 +101,12 @@ export default function EquipmentDetail() {
         <Empty title="No current rental" body="This machine is not on an active or scheduled rental." />
       )}
 
-      <Title title="Condition history" subtitle="Before-delivery and after-pickup photos from completed jobs." />
+      <Title title="Rental history" />
       {data.history.length === 0 ? (
         <Empty title="No history yet" body="Photos appear after deliveries and pickups are completed." />
       ) : (
         data.history.map((rental) => {
-          const before = (rental.photos || []).filter((photo) => photo.type === "DELIVERY");
-          const after = (rental.photos || []).filter((photo) => photo.type === "PICKUP");
+          const { before, after } = conditionPhotos(rental);
           return (
             <Card key={rental.id}>
               <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 8 }}>
@@ -109,16 +118,21 @@ export default function EquipmentDetail() {
               </Text>
               {rental.deliveredBy ? <Text style={{ color: colors.muted }}>Delivered by {rental.deliveredBy}</Text> : null}
               {rental.pickedUpBy ? <Text style={{ color: colors.muted }}>Picked up by {rental.pickedUpBy}</Text> : null}
+              {rental.charge.durationLabel ? (
+                <Text style={{ color: colors.muted }}>Duration {rental.charge.durationLabel}</Text>
+              ) : null}
               <Text style={{ marginTop: 6, fontWeight: "700", color: colors.ink }}>
                 {rental.charge.formatted}
                 {rental.charge.isEstimate ? " estimated" : " final"}
               </Text>
               {rental.rateLabel ? <Text style={{ color: colors.muted }}>{rental.rateLabel}</Text> : null}
+              {rental.conditionNotes ? (
+                <Text style={{ marginTop: 8, color: colors.ink, lineHeight: 20 }}>{rental.conditionNotes}</Text>
+              ) : rental.notes ? (
+                <Text style={{ marginTop: 8, color: colors.ink, lineHeight: 20 }}>{rental.notes}</Text>
+              ) : null}
               <PhotoGrid label="Before delivery" photos={before} />
               <PhotoGrid label="After pickup" photos={after} />
-              {rental.notes ? (
-                <Text style={{ marginTop: 10, color: colors.ink, lineHeight: 20 }}>{rental.notes}</Text>
-              ) : null}
             </Card>
           );
         })

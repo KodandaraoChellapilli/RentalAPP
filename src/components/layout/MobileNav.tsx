@@ -31,7 +31,7 @@ export function MobileDrawer({
             <BrandMark className="h-9 w-9" compact />
             <span className="font-semibold">West Ridge Rentals</span>
           </Link>
-          <button type="button" className="rounded-xl p-2 hover:bg-stone-100" onClick={onClose} aria-label="Close navigation">
+          <button type="button" className="min-h-0 rounded p-2 hover:bg-stone-100" onClick={onClose} aria-label="Close navigation">
             <X className="h-5 w-5" />
           </button>
         </div>

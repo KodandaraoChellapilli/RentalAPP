@@ -71,17 +71,17 @@ export default async function CustomerRentalDetailPage({
           status={rental.status}
           finalAmount={rental.finalAmount}
         />
-        <div className="mt-6 grid gap-2 text-sm text-stone-600">
-          <p>Rental started: {formatDateTime(rental.startAt)}</p>
+        <div className="mt-4 grid gap-1.5 text-sm text-stone-600">
+          <p>Started: {formatDateTime(rental.startAt)}</p>
           <p>Scheduled pickup: {formatDateTime(rental.expectedPickupAt)}</p>
           <p>Returned: {formatDateTime(rental.endAt)}</p>
-          <p>Destination: {rental.destination || "—"}</p>
+          <p>Location: {rental.destination || "—"}</p>
           {delivery ? <p>Scheduled delivery: {formatDateTime(delivery.startAt)}</p> : null}
-          {delivery?.customerConfirmedAt ? <p>You confirmed this delivery on {formatDateTime(delivery.customerConfirmedAt)}.</p> : null}
+          {delivery?.customerConfirmedAt ? <p>Delivery confirmed {formatDateTime(delivery.customerConfirmedAt)}</p> : null}
           {pickupRequest ? (
             <p>
               Pickup requested for {formatDateTime(pickupRequest.startAt)}
-              {pickupRequest.destination ? ` at ${pickupRequest.destination}` : ""}. The rental is still active.
+              {pickupRequest.destination ? ` at ${pickupRequest.destination}` : ""}. Still on rent.
             </p>
           ) : null}
         </div>

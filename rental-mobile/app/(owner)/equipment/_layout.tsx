@@ -1,15 +1,12 @@
 import { Stack } from "expo-router";
-import { colors } from "../../../src/theme";
+import { headerOptions } from "../../../src/theme";
 
 export default function EquipmentLayout() {
   return (
     <Stack
       screenOptions={{
-        headerStyle: { backgroundColor: colors.ink },
-        headerTintColor: colors.white,
-        headerTitleStyle: { fontWeight: "700" },
+        ...headerOptions,
         headerBackTitle: "Fleet",
-        contentStyle: { backgroundColor: colors.bg, flex: 1 },
       }}
     >
       <Stack.Screen name="index" options={{ title: "Equipment" }} />

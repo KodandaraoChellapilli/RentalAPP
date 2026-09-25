@@ -36,16 +36,21 @@ export function photoJson(
   };
 }
 
-export function equipmentSummary(equipment: {
-  id: string;
-  number: string;
-  name: string;
-  type: string;
-  status: string;
-  rate: number;
-  billingUnit: string;
-  notes?: string | null;
-}) {
+export function equipmentSummary(
+  equipment: {
+    id: string;
+    number: string;
+    name: string;
+    type: string;
+    status: string;
+    rate: number;
+    billingUnit: string;
+    notes?: string | null;
+    photos?: Array<{ path: string }>;
+  },
+  origin?: string,
+) {
+  const latest = equipment.photos?.[0];
   return {
     id: equipment.id,
     number: equipment.number,
@@ -57,6 +62,7 @@ export function equipmentSummary(equipment: {
     rateLabel: formatRate(equipment.rate, equipment.billingUnit),
     notes: equipment.notes || null,
     label: `#${equipment.number} ${equipment.name}`,
+    photoUrl: latest && origin ? absoluteUrl(origin, latest.path) : null,
   };
 }
 

@@ -31,11 +31,7 @@ export function Sheet({
       <View style={styles.root}>
         <Pressable style={styles.dim} onPress={onClose} accessibilityLabel="Dismiss" />
         <View style={styles.sheet}>
-          <View style={styles.handle} />
-          <View style={styles.header}>
-            <Text style={styles.kicker}>Confirm</Text>
-            <Text style={styles.title}>{title}</Text>
-          </View>
+          <Text style={styles.title}>{title}</Text>
           {body ? <Text style={styles.body}>{body}</Text> : null}
           {children}
           <View style={styles.actions}>
@@ -62,34 +58,12 @@ const styles = StyleSheet.create({
   dim: { flex: 1 },
   sheet: {
     backgroundColor: colors.surface,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: radius.lg,
+    borderTopRightRadius: radius.lg,
     padding: space.lg,
     paddingBottom: 28,
   },
-  handle: {
-    alignSelf: "center",
-    width: 36,
-    height: 4,
-    borderRadius: radius.pill,
-    backgroundColor: colors.line,
-    marginBottom: 12,
-  },
-  header: {
-    backgroundColor: colors.ink,
-    marginHorizontal: -space.lg,
-    marginBottom: space.md,
-    paddingHorizontal: space.lg,
-    paddingVertical: space.md,
-  },
-  kicker: {
-    color: colors.amber,
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 1.4,
-    textTransform: "uppercase",
-  },
-  title: { color: colors.white, fontSize: 20, fontWeight: "700", marginTop: 4 },
-  body: { color: colors.muted, lineHeight: 22, marginBottom: 16 },
+  title: { color: colors.ink, fontSize: 18, fontWeight: "700" },
+  body: { color: colors.muted, lineHeight: 21, marginTop: 8, marginBottom: 16 },
   actions: { flexDirection: "row", gap: 10, marginTop: 8 },
 });

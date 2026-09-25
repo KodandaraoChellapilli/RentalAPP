@@ -17,12 +17,25 @@ export async function GET(request: NextRequest) {
 
     const rentals = await prisma.rental.findMany({
       where: { customerId },
-      include: { equipment: true, customer: true },
+      include: { equipment: true, customer: true, events: true },
       orderBy: { createdAt: "desc" },
     });
+    function withCustomerActions(rental: (typeof rentals)[number]) {
+      const delivery = rental.events.find((event) => event.type === "DELIVERY");
+      return rentalJson(rental, {
+        canRequestPickup: rental.status === "ACTIVE",
+        canConfirmDelivery: Boolean(
+          rental.status === "SCHEDULED" && delivery && !delivery.completedAt && !delivery.customerConfirmedAt,
+        ),
+      });
+    }
     return json({
-      active: rentals.filter((rental) => rental.status === "ACTIVE" || rental.status === "SCHEDULED").map((rental) => rentalJson(rental)),
-      history: rentals.filter((rental) => rental.status === "COMPLETED" || rental.status === "CANCELLED").map((rental) => rentalJson(rental)),
+      active: rentals
+        .filter((rental) => rental.status === "ACTIVE" || rental.status === "SCHEDULED")
+        .map(withCustomerActions),
+      history: rentals
+        .filter((rental) => rental.status === "COMPLETED" || rental.status === "CANCELLED")
+        .map((rental) => rentalJson(rental)),
     });
   } catch (error) {
     return fail(error);

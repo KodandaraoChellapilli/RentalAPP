@@ -1,17 +1,14 @@
 import { Stack } from "expo-router";
 import { HeaderIdentity } from "../../../src/components/HeaderIdentity";
 import { SignOutButton } from "../../../src/components/SignOutButton";
-import { colors } from "../../../src/theme";
+import { headerOptions } from "../../../src/theme";
 
 export default function CustomerRentalsLayout() {
   return (
     <Stack
       screenOptions={{
-        headerStyle: { backgroundColor: colors.ink },
-        headerTintColor: colors.white,
-        headerTitleStyle: { fontWeight: "700" },
+        ...headerOptions,
         headerBackTitle: "Rentals",
-        contentStyle: { backgroundColor: colors.bg, flex: 1 },
       }}
     >
       <Stack.Screen

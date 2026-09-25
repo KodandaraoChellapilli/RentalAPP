@@ -1,7 +1,5 @@
 "use client";
 
-import { Search } from "lucide-react";
-
 export function FilterToolbar({
   search,
   onSearch,
@@ -17,14 +15,22 @@ export function FilterToolbar({
 }) {
   return (
     <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-      <label className="relative block min-w-0 flex-1">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
+      <label className="search-field">
+        <span className="search-field-icon" aria-hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="7" />
+            <path d="M20 20l-3.4-3.4" />
+          </svg>
+        </span>
         <input
-          className="field pl-10"
+          className="field field-search"
+          type="search"
           value={search}
           onChange={(event) => onSearch(event.target.value)}
           placeholder={placeholder}
           aria-label={placeholder}
+          autoComplete="off"
+          spellCheck={false}
         />
       </label>
       <div className="flex flex-wrap items-center gap-2">
@@ -49,7 +55,7 @@ export function FilterSelect({
   return (
     <label className="flex items-center gap-2 text-sm text-stone-600">
       <span className="sr-only">{label}</span>
-      <select className="field min-h-11 w-auto py-2" value={value} onChange={(event) => onChange(event.target.value)}>
+      <select className="field w-auto" value={value} onChange={(event) => onChange(event.target.value)}>
         {options.map((option) => (
           <option key={option.value} value={option.value}>
             {option.label}

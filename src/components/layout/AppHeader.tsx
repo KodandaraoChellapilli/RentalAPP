@@ -21,7 +21,7 @@ export function AppHeader({
         <div className="flex min-w-0 items-center gap-3">
           <button
             type="button"
-            className="rounded-xl border border-stone-200 bg-white p-2 lg:hidden"
+            className="min-h-0 rounded border border-stone-200 bg-white p-2 lg:hidden"
             onClick={onOpenNav}
             aria-label="Open navigation"
           >

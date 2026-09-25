@@ -18,30 +18,45 @@ export default function JobsScreen() {
 
   if (initialLoading) return <Loading label="Loading assignments…" />;
 
+  const nextJob = jobs?.[0];
+  const rest = jobs?.slice(1) || [];
+
   return (
     <Screen onRefresh={load} refreshing={refreshing}>
-      <Title
-        kicker="Field work"
-        title="Transports"
-        subtitle="Open an assigned delivery or pickup. Photos, notes, and a condition confirm are required before you can complete the job."
-      />
+      <Title title="Transports" subtitle="Your assigned deliveries and pickups." />
       <ErrorText message={error} />
       {!jobs?.length ? (
-        <Empty title="No open transports" body="When the owner assigns you a delivery or pickup, it will show here." />
+        <Empty title="No open transports" body="When a delivery or pickup is assigned to you, it will show here." />
       ) : (
-        jobs.map((job) => (
-          <JobCard
-            key={job.id}
-            job={job}
-            onOpen={() =>
-              router.push(
-                (job.type === "PICKUP"
-                  ? `/(employee)/jobs/pickup/${job.id}`
-                  : `/(employee)/jobs/deliver/${job.id}`) as Href,
-              )
-            }
-          />
-        ))
+        <>
+          {nextJob ? (
+            <JobCard
+              key={nextJob.id}
+              featured
+              job={nextJob}
+              onOpen={() =>
+                router.push(
+                  (nextJob.type === "PICKUP"
+                    ? `/(employee)/jobs/pickup/${nextJob.id}`
+                    : `/(employee)/jobs/deliver/${nextJob.id}`) as Href,
+                )
+              }
+            />
+          ) : null}
+          {rest.map((job) => (
+            <JobCard
+              key={job.id}
+              job={job}
+              onOpen={() =>
+                router.push(
+                  (job.type === "PICKUP"
+                    ? `/(employee)/jobs/pickup/${job.id}`
+                    : `/(employee)/jobs/deliver/${job.id}`) as Href,
+                )
+              }
+            />
+          ))}
+        </>
       )}
     </Screen>
   );

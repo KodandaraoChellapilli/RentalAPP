@@ -6,25 +6,23 @@ export function WorkflowSteps({
   current: number;
 }) {
   return (
-    <ol className="mb-6 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+    <ol className="mb-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
       {steps.map((step, index) => {
         const state = index < current ? "done" : index === current ? "current" : "upcoming";
         return (
-          <li
-            key={step}
-            className={`rounded-xl border px-3 py-2 text-sm ${
-              state === "current"
-                ? "border-orange-300 bg-orange-50 font-semibold text-stone-900"
-                : state === "done"
-                  ? "border-emerald-200 bg-emerald-50 text-emerald-900"
-                  : "border-stone-200 bg-white text-stone-500"
-            }`}
-          >
-            <p className="text-[11px] font-bold uppercase tracking-wide">
-              Step {index + 1}
-              {state === "done" ? " · Done" : state === "current" ? " · Now" : ""}
-            </p>
-            <p className="mt-1">{step}</p>
+          <li key={step} className="flex items-center gap-2">
+            <span
+              className={
+                state === "current"
+                  ? "font-semibold text-stone-900"
+                  : state === "done"
+                    ? "text-stone-700"
+                    : "text-stone-400"
+              }
+            >
+              {index + 1}. {step}
+            </span>
+            {index < steps.length - 1 ? <span className="text-stone-300">→</span> : null}
           </li>
         );
       })}

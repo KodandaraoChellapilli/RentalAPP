@@ -53,10 +53,10 @@ export function LiveCharge({
 
   return (
     <div>
-      <p className="text-xs uppercase tracking-wide text-stone-500">
-        {charge.isEstimate ? "Estimated Current Charge" : "Final Rental Amount"}
+      <p className="text-xs font-medium text-stone-500">
+        {charge.isEstimate ? "Estimated charge" : "Final amount"}
       </p>
-      <p className="mt-1 text-3xl font-semibold tabular-nums text-stone-900">{formatMoney(charge.amount)}</p>
+      <p className="mt-1 text-2xl font-semibold tabular-nums text-stone-900">{formatMoney(charge.amount)}</p>
       <p className="mt-1 text-sm text-stone-500">
         {charge.durationMs ? `${formatDuration(charge.durationMs)} · ${formatMoney(rate)}/${charge.unitLabel.replace(/s$/, "")}` : "Rental has not started"}
       </p>

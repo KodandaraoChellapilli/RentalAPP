@@ -46,8 +46,22 @@ export function StatusBadge({
     kind === "rental" ? RENTAL_COLORS[status] : kind === "transport" ? TRANSPORT_COLORS[status] : EQUIPMENT_COLORS[status];
 
   return (
-    <span className={cn("inline-flex rounded-full px-3 py-1 text-xs font-bold tracking-wide", color || "bg-stone-100")}>
+    <span className={cn("inline-flex rounded px-2 py-0.5 text-xs font-medium", color || "bg-stone-100 text-stone-700")}>
       {label}
+    </span>
+  );
+}
+
+export function TypeBadge({ type }: { type: string }) {
+  const pickup = type === "PICKUP";
+  return (
+    <span
+      className={cn(
+        "inline-flex rounded px-2 py-0.5 text-xs font-medium",
+        pickup ? "bg-sky-100 text-sky-900" : "bg-orange-100 text-orange-900",
+      )}
+    >
+      {pickup ? "Pickup" : "Delivery"}
     </span>
   );
 }

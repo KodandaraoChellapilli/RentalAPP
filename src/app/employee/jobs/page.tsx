@@ -22,26 +22,44 @@ export default async function JobsPage({
     include: { equipment: true, customer: true, rental: true },
     orderBy: { startAt: "asc" },
   });
+  const nextJob = jobs[0];
+  const rest = jobs.slice(1);
 
   return (
     <div>
-      <PageHeader title="Transports" subtitle="Assigned deliveries and pickups. Completing a job updates the rental and equipment status." />
+      <PageHeader title="Transports" subtitle="Your assigned deliveries and pickups." />
       <ErrorBanner message={error} />
       {done === "delivery" ? (
         <Alert variant="success" className="mb-4">
-          Delivery recorded. Before-delivery photos are stored. The rental is now Active / On Rent.
+          Delivery recorded. The rental is now active.
         </Alert>
       ) : null}
       {done === "pickup" ? (
         <Alert variant="success" className="mb-4">
-          Pickup recorded. After-pickup photos are stored and the final rental amount has been calculated.
+          Pickup recorded. The final rental amount has been stored.
         </Alert>
       ) : null}
       {jobs.length === 0 ? (
-        <EmptyState title="No open transports" body="When the owner assigns you a delivery or pickup, it will show here." />
+        <EmptyState title="No open transports" body="When a delivery or pickup is assigned to you, it will show here." />
       ) : (
-        <div className="grid gap-3 md:grid-cols-2">
-          {jobs.map((job) => (
+        <div className="space-y-3">
+          {nextJob ? (
+            <JobCard
+              key={nextJob.id}
+              id={nextJob.id}
+              type={nextJob.type}
+              startAt={nextJob.startAt}
+              title={nextJob.title}
+              equipmentLabel={equipmentLabel(nextJob.equipment, nextJob.title)}
+              customerName={nextJob.customer?.name}
+              destination={nextJob.destination}
+              rateLabel={nextJob.rental ? formatRate(nextJob.rental.rateSnapshot, nextJob.rental.billingUnitSnapshot) : undefined}
+              href={employeeJobHref(nextJob.type, nextJob.id, nextJob.rentalId)}
+              actionLabel={nextJob.type === "PICKUP" ? "Start pickup" : "Start delivery"}
+              featured
+            />
+          ) : null}
+          {rest.map((job) => (
             <JobCard
               key={job.id}
               id={job.id}

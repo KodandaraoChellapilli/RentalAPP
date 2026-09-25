@@ -21,19 +21,19 @@ const COPY: Record<
 > = {
   before: {
     eyebrow: "Initial condition",
-    title: "Before Delivery — Equipment Condition",
-    description: "Take photos of the equipment before delivering it to the customer.",
-    helper: "This documents the equipment before the customer receives it.",
+    title: "Before photos",
+    description: "Photograph the machine before it leaves.",
+    helper: "At least one photo is required.",
     requiredLabel: "1 photo required to complete delivery",
-    accent: "border-orange-300 bg-orange-50/70",
+    accent: "border-stone-200 bg-stone-50",
   },
   after: {
     eyebrow: "Return condition",
-    title: "After Pickup — Return Condition",
-    description: "Take photos of the equipment after it has been returned by the customer.",
-    helper: "This documents the equipment after the customer returns it.",
+    title: "After photos",
+    description: "Photograph the machine after it returns.",
+    helper: "At least one photo is required.",
     requiredLabel: "1 photo required to complete pickup",
-    accent: "border-sky-300 bg-sky-50/70",
+    accent: "border-stone-200 bg-stone-50",
   },
 };
 
@@ -98,14 +98,9 @@ export function EquipmentPhotoUpload({
   }
 
   return (
-    <section className={`rounded-2xl border-2 p-5 ${copy.accent}`}>
-      <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-orange-800">{copy.eyebrow}</p>
-      <h3 className="mt-1 flex items-center gap-2 text-xl font-semibold text-stone-900">
-        <Camera className="h-6 w-6 shrink-0 text-orange-700" />
-        {heading || copy.title}
-      </h3>
-      <p className="mt-2 text-base font-medium text-stone-800">{purpose || copy.description}</p>
-      <p className="mt-1 text-sm text-stone-600">{copy.helper}</p>
+    <section className={`rounded border p-4 ${copy.accent}`}>
+      <p className="text-sm font-semibold text-stone-900">{heading || copy.title}</p>
+      <p className="mt-1 text-sm text-stone-600">{purpose || copy.description}</p>
 
       <input
         ref={syncedRef}
@@ -142,7 +137,7 @@ export function EquipmentPhotoUpload({
       />
 
       <div
-        className={`mt-5 rounded-2xl border-2 border-dashed bg-white px-4 py-8 text-center transition ${
+        className={`mt-4 rounded border-2 border-dashed bg-white px-4 py-6 text-center ${
           dragging ? "border-orange-500 bg-orange-50" : "border-stone-300"
         }`}
         onDragEnter={(event) => {
@@ -163,19 +158,19 @@ export function EquipmentPhotoUpload({
           addFiles(Array.from(event.dataTransfer.files || []));
         }}
       >
-        <Camera className="mx-auto h-12 w-12 text-orange-700" />
+        <Camera className="mx-auto h-8 w-8 text-stone-400" />
         <p className="mt-3 text-sm font-medium text-stone-700">
           {dragging ? "Drop photos here" : "Take a photo or upload from this device"}
         </p>
         <p className="mt-1 text-xs text-stone-500">Front, back, sides, attachments, and any damage.</p>
         <div className="mt-5 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <button className="btn btn-primary min-w-[180px]" type="button" onClick={() => cameraRef.current?.click()}>
+          <button className="btn btn-primary" type="button" onClick={() => cameraRef.current?.click()}>
             <Camera className="h-4 w-4" />
-            Take Photo
+            Take photo
           </button>
-          <button className="btn btn-dark min-w-[180px]" type="button" onClick={() => galleryRef.current?.click()}>
+          <button className="btn btn-ghost" type="button" onClick={() => galleryRef.current?.click()}>
             <Upload className="h-4 w-4" />
-            Upload Photos
+            Upload photos
           </button>
         </div>
       </div>

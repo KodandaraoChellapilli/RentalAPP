@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 function navClass(active: boolean) {
   return cn(
-    "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition",
+    "flex items-center gap-3 rounded px-3 py-2 text-sm font-medium",
     active ? "bg-stone-900 text-white" : "text-stone-600 hover:bg-stone-100 hover:text-stone-900",
   );
 }
@@ -27,7 +27,7 @@ export function SidebarNav({
       {navGroupsFor(role).map((group, index) => (
         <div key={group.label || `group-${index}`} className={index > 0 ? "mt-6" : ""}>
           {group.label ? (
-            <div className="mb-1 px-3 text-[11px] font-semibold uppercase tracking-wider text-stone-400">
+            <div className="mb-1 px-3 text-xs font-medium text-stone-400">
               {group.label}
             </div>
           ) : null}
@@ -73,12 +73,9 @@ export function AppSidebar({
   return (
     <aside className="hidden border-r border-stone-200 bg-white lg:flex lg:h-full lg:flex-col">
       <div className="border-b border-stone-200 px-5 py-4">
-        <Link href={homeHrefFor(role)} className="flex items-center gap-3">
-          <BrandMark className="h-10 w-10" />
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-orange-700">West Ridge</p>
-            <p className="text-lg font-semibold leading-none text-stone-900">Rentals</p>
-          </div>
+        <Link href={homeHrefFor(role)} className="flex items-center gap-2.5">
+          <BrandMark className="h-8 w-8" />
+          <p className="text-[15px] font-semibold leading-tight text-stone-900">West Ridge Rentals</p>
         </Link>
       </div>
       <nav className="flex-1 overflow-y-auto p-3">

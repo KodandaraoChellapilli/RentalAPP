@@ -11,7 +11,7 @@ export default async function RentalsPage() {
 
   return (
     <div>
-      <PageHeader title="Rentals" subtitle="Active, scheduled, and completed rental records." />
+      <PageHeader title="Rentals" subtitle="Scheduled, active, and completed rentals." />
       <RentalsTable
         asOf={Date.now()}
         items={rentals.map((rental) => ({

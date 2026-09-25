@@ -1,4 +1,3 @@
-import { Inbox } from "lucide-react";
 import Link from "next/link";
 
 export function EmptyState({
@@ -13,14 +12,12 @@ export function EmptyState({
   icon?: React.ReactNode;
 }) {
   return (
-    <div className="card px-6 py-12 text-center">
-      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-stone-100 text-stone-500">
-        {icon || <Inbox className="h-5 w-5" />}
-      </div>
-      <p className="mt-4 font-semibold text-stone-800">{title}</p>
+    <div className="card px-5 py-8 text-center">
+      {icon ? <div className="mx-auto mb-3 text-stone-400">{icon}</div> : null}
+      <p className="font-semibold text-stone-800">{title}</p>
       <p className="mx-auto mt-1 max-w-md text-sm text-stone-500">{body}</p>
       {action ? (
-        <Link href={action.href} className="btn btn-primary mt-5">
+        <Link href={action.href} className="btn btn-primary mt-4">
           {action.label}
         </Link>
       ) : null}

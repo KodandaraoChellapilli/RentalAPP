@@ -1,7 +1,6 @@
 import Link from "next/link";
-import { StatusBadge } from "@/components/StatusBadge";
+import { StatusBadge, TypeBadge } from "@/components/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { EVENT_TYPE_LABELS, type EventType } from "@/lib/constants";
 import { transportStatus } from "@/lib/transports";
 import { formatDateTime } from "@/lib/utils";
 
@@ -32,7 +31,7 @@ export function JobsTable({
   completeHref: (job: JobRow) => string | null;
 }) {
   if (items.length === 0) {
-    return <EmptyState title={emptyTitle} body={emptyBody} action={{ href: "/admin/schedule/new", label: "New schedule" }} />;
+    return <EmptyState title={emptyTitle} body={emptyBody} action={{ href: "/admin/schedule/new", label: "Schedule transport" }} />;
   }
 
   return (
@@ -40,13 +39,14 @@ export function JobsTable({
       <table className="data-table">
         <thead>
           <tr>
-            <th>When</th>
+            <th>Type</th>
             <th>Equipment</th>
             <th>Customer</th>
             <th>Location</th>
-            <th>Employee</th>
+            <th>When</th>
+            <th>Assigned</th>
             <th>Status</th>
-            <th>Actions</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -55,40 +55,35 @@ export function JobsTable({
             return (
               <tr key={job.id}>
                 <td>
-                  <p className="font-medium">{formatDateTime(job.startAt)}</p>
-                  <p className="text-xs uppercase tracking-wide text-stone-500">
-                    {EVENT_TYPE_LABELS[job.type as EventType] || job.type}
-                  </p>
+                  <TypeBadge type={job.type} />
                 </td>
                 <td>
                   {job.equipmentId ? (
-                    <Link className="font-semibold text-stone-900" href={`/admin/equipment/${job.equipmentId}`}>
+                    <Link className="font-medium text-stone-900" href={`/admin/equipment/${job.equipmentId}`}>
                       {job.equipmentLabel || job.title}
                     </Link>
                   ) : (
                     job.title || "—"
                   )}
                 </td>
-                <td>{job.customerName || "—"}</td>
-                <td>{job.destination || "—"}</td>
+                <td className="max-w-[10rem] truncate">{job.customerName || "—"}</td>
+                <td className="max-w-[12rem] truncate">{job.destination || "—"}</td>
+                <td>{formatDateTime(job.startAt)}</td>
                 <td>{job.employeeName || "Unassigned"}</td>
                 <td>
                   <StatusBadge kind="transport" status={transportStatus(job)} />
                   {job.source === "CUSTOMER" && !job.completedAt ? (
-                    <p className="mt-1 text-xs text-stone-500">Customer requested pickup</p>
+                    <p className="mt-1 text-xs text-stone-500">Customer requested</p>
                   ) : null}
                 </td>
                 <td>
-                  <div className="flex flex-wrap gap-2">
-                    <Link className="text-sm font-medium text-stone-500" href="/admin/calendar">
-                      Calendar
+                  {complete ? (
+                    <Link className="text-sm font-medium text-orange-800" href={complete}>
+                      {job.type === "PICKUP" ? "Open pickup" : "Open delivery"}
                     </Link>
-                    {complete ? (
-                      <Link className="text-sm font-medium text-orange-700" href={complete}>
-                        Open inspection
-                      </Link>
-                    ) : null}
-                  </div>
+                  ) : (
+                    <span className="text-sm text-stone-400">Done</span>
+                  )}
                 </td>
               </tr>
             );

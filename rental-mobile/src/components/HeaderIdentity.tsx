@@ -1,7 +1,7 @@
 import { Text, View, StyleSheet } from "react-native";
 import { useAuth } from "../lib/auth";
 import { firstName } from "../lib/format";
-import { colors, type } from "../theme";
+import { colors, typeScale } from "../theme";
 
 /** Shows the authenticated user's first name in headers (owner / employee / customer). */
 export function HeaderIdentity() {
@@ -21,13 +21,11 @@ export function HeaderIdentity() {
 
 const styles = StyleSheet.create({
   spacer: { width: 16 },
-  wrap: { paddingLeft: 16, maxWidth: 120 },
+  wrap: { paddingLeft: 16, maxWidth: 140 },
   kicker: {
-    color: colors.amber,
-    fontSize: type.kicker,
-    fontWeight: "700",
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
+    color: colors.muted,
+    fontSize: typeScale.kicker,
+    fontWeight: "600",
   },
-  name: { color: colors.white, fontWeight: "700", fontSize: 13, marginTop: 1 },
+  name: { color: colors.ink, fontWeight: "700", fontSize: 13, marginTop: 1 },
 });

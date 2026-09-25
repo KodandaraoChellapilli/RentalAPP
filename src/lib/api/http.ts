@@ -30,8 +30,11 @@ export function fail(error: unknown) {
 
 export function publicOrigin(request: NextRequest) {
   const forwarded = request.headers.get("x-forwarded-host");
-  const host = forwarded || request.headers.get("host") || "localhost:3001";
-  const proto = request.headers.get("x-forwarded-proto") || (host.includes("localhost") ? "http" : "https");
+  const host = (forwarded || request.headers.get("host") || "localhost:3001").split(",")[0]?.trim() || "localhost:3001";
+  const forwardedProto = (request.headers.get("x-forwarded-proto") || "").split(",")[0]?.trim();
+  // Yard photos are served from this Next process over HTTP in local/LAN use.
+  // Only honor https when a proxy explicitly forwards it.
+  const proto = forwardedProto === "https" ? "https" : "http";
   return `${proto}://${host}`;
 }
 

@@ -2,11 +2,12 @@ import { useCallback, useLayoutEffect, useState } from "react";
 import { Text, View, StyleSheet } from "react-native";
 import { useFocusEffect, useLocalSearchParams, useNavigation } from "expo-router";
 import { Badge, Button, Card, Empty, ErrorText, Loading, Screen, Title } from "../../../src/components/ui";
+import { DateTimeField } from "../../../src/components/DateTimeField";
 import { Field } from "../../../src/components/Field";
 import { PhotoGrid } from "../../../src/components/PhotoGrid";
 import { api } from "../../../src/lib/api";
 import { friendlyError } from "../../../src/lib/errors";
-import { formatWhen } from "../../../src/lib/format";
+import { formatWhen, toDateInput, toTimeInput } from "../../../src/lib/format";
 import { colors, radius } from "../../../src/theme";
 import type { Photo, Rental } from "../../../src/types";
 
@@ -16,8 +17,12 @@ export default function CustomerRentalDetail() {
   const [rental, setRental] = useState<(Rental & { photos?: Photo[] }) | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [pickupDate, setPickupDate] = useState("");
-  const [pickupTime, setPickupTime] = useState("");
+  const [pickupAt, setPickupAt] = useState(() => {
+    const next = new Date();
+    next.setDate(next.getDate() + 1);
+    next.setHours(10, 0, 0, 0);
+    return next;
+  });
   const [pickupLocation, setPickupLocation] = useState("");
   const [pending, setPending] = useState<"pickup" | "confirm" | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -28,6 +33,10 @@ export default function CustomerRentalDetail() {
       const data = await api<{ rental: Rental & { photos?: Photo[] } }>(`/api/my/rentals/${id}`);
       setRental(data.rental);
       setPickupLocation((current) => current || data.rental.destination || "");
+      if (data.rental.expectedPickupAt) {
+        const expected = new Date(data.rental.expectedPickupAt);
+        if (!Number.isNaN(expected.getTime())) setPickupAt(expected);
+      }
       setError(null);
       navigation.setOptions({ title: data.rental.equipment?.label || "Rental" });
     } catch (err) {
@@ -52,7 +61,7 @@ export default function CustomerRentalDetail() {
 
   async function requestPickup() {
     if (!rental || pending) return;
-    if (!pickupDate.trim() || !pickupTime.trim() || !pickupLocation.trim()) {
+    if (!pickupLocation.trim()) {
       setError("Pickup date, time, and location are required.");
       return;
     }
@@ -62,8 +71,8 @@ export default function CustomerRentalDetail() {
       await api(`/api/my/rentals/${rental.id}/pickup-request`, {
         method: "POST",
         body: JSON.stringify({
-          pickupDate: pickupDate.trim(),
-          pickupTime: pickupTime.trim(),
+          pickupDate: toDateInput(pickupAt),
+          pickupTime: toTimeInput(pickupAt),
           pickupLocation: pickupLocation.trim(),
         }),
       });
@@ -110,10 +119,7 @@ export default function CustomerRentalDetail() {
 
   return (
     <Screen onRefresh={load} refreshing={refreshing}>
-      <Title
-        title={rental.equipment?.label || "Rental"}
-        subtitle={`${rental.rateLabel} · only visible to your company account`}
-      />
+      <Title title={rental.equipment?.label || "Rental"} subtitle={rental.rateLabel} />
       <ErrorText message={error} />
       {notice ? <Text style={styles.notice}>{notice}</Text> : null}
 
@@ -121,23 +127,17 @@ export default function CustomerRentalDetail() {
         <Badge status={rental.status} />
       </View>
 
-      <View style={[styles.chargeHero, estimate ? styles.chargeEst : styles.chargeFinal]}>
-        <Text style={styles.chargeKicker}>{estimate ? "Estimated until pickup" : "Final amount"}</Text>
+      <Card>
+        <Text style={styles.chargeKicker}>{estimate ? "Estimated charge" : "Final amount"}</Text>
         <Text style={styles.chargeAmount}>{rental.charge.formatted}</Text>
         <Text style={styles.chargeMeta}>
           {rental.charge.durationLabel}
           {rental.charge.billedUnits ? ` · ${rental.charge.billedUnits} ${rental.charge.unitLabel}` : ""}
         </Text>
         {estimate ? (
-          <Text style={styles.chargeNote}>
-            This estimate updates while the machine is on rent. The final charge is set when pickup is completed.
-          </Text>
-        ) : (
-          <Text style={styles.chargeNote}>
-            Final charge from West Ridge billing. Contact the yard if you have questions about this amount.
-          </Text>
-        )}
-      </View>
+          <Text style={styles.chargeNote}>Updates while the machine is on rent. Final amount is set at pickup.</Text>
+        ) : null}
+      </Card>
 
       <Card>
         <Text style={styles.section}>Jobsite</Text>
@@ -176,21 +176,43 @@ export default function CustomerRentalDetail() {
         <Card>
           <Text style={styles.section}>End rental</Text>
           <Text style={[styles.meta, { marginBottom: 12 }]}>
-            When would you like this equipment picked up? The rental stays active until pickup is completed.
+            Requests a pickup. The rental stays active until pickup is completed.
           </Text>
-          <Field label="Pickup date" value={pickupDate} onChangeText={setPickupDate} placeholder="YYYY-MM-DD" />
-          <Field label="Pickup time" value={pickupTime} onChangeText={setPickupTime} placeholder="HH:MM" />
+          <DateTimeField
+            label="Pickup date"
+            mode="date"
+            value={pickupAt}
+            onChange={(next) =>
+              setPickupAt((current) => {
+                const merged = new Date(current);
+                merged.setFullYear(next.getFullYear(), next.getMonth(), next.getDate());
+                return merged;
+              })
+            }
+          />
+          <DateTimeField
+            label="Pickup time"
+            mode="time"
+            value={pickupAt}
+            onChange={(next) =>
+              setPickupAt((current) => {
+                const merged = new Date(current);
+                merged.setHours(next.getHours(), next.getMinutes(), 0, 0);
+                return merged;
+              })
+            }
+          />
           <Field
             label="Pickup location"
             value={pickupLocation}
             onChangeText={setPickupLocation}
             placeholder="Jobsite address"
           />
-          <Button label="Request pickup" pending={pending === "pickup"} onPress={requestPickup} />
+          <Button label="Request pickup" variant="dark" pending={pending === "pickup"} onPress={requestPickup} />
         </Card>
       ) : null}
 
-      <Title title="Condition photos" subtitle="Before-delivery and after-pickup photos from the yard crew." />
+      <Title title="Photos" />
       <Card>
         <PhotoGrid
           label="Before delivery"
@@ -208,23 +230,10 @@ export default function CustomerRentalDetail() {
 }
 
 const styles = StyleSheet.create({
-  chargeHero: {
-    borderRadius: radius.lg,
-    padding: 18,
-    marginBottom: 12,
-  },
-  chargeEst: { backgroundColor: colors.ink },
-  chargeFinal: { backgroundColor: colors.success },
-  chargeKicker: {
-    color: "rgba(255,255,255,0.72)",
-    fontWeight: "700",
-    fontSize: 11,
-    letterSpacing: 1.2,
-    textTransform: "uppercase",
-  },
-  chargeAmount: { color: colors.white, fontSize: 36, fontWeight: "700", marginTop: 8 },
-  chargeMeta: { color: "rgba(255,255,255,0.8)", marginTop: 6 },
-  chargeNote: { color: "rgba(255,255,255,0.78)", marginTop: 12, lineHeight: 20 },
+  chargeKicker: { color: colors.muted, fontWeight: "600", fontSize: 13 },
+  chargeAmount: { color: colors.ink, fontSize: 28, fontWeight: "700", marginTop: 4 },
+  chargeMeta: { color: colors.muted, marginTop: 4 },
+  chargeNote: { color: colors.muted, marginTop: 8, lineHeight: 20 },
   section: { fontWeight: "700", color: colors.ink },
   value: { color: colors.ink, marginTop: 4, lineHeight: 20 },
   meta: { color: colors.muted, marginTop: 4 },

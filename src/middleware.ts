@@ -12,7 +12,12 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/uploads") ||
     pathname === "/favicon.ico"
   ) {
-    return NextResponse.next();
+    const response = NextResponse.next();
+    if (pathname.startsWith("/uploads")) {
+      response.headers.set("Access-Control-Allow-Origin", "*");
+      response.headers.set("Cross-Origin-Resource-Policy", "cross-origin");
+    }
+    return response;
   }
 
   const token = request.cookies.get(SESSION_COOKIE)?.value;

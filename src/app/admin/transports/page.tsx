@@ -20,17 +20,17 @@ export default async function AdminTransportsPage({
     <div>
       <PageHeader
         title="Transports"
-        subtitle="Deliveries and pickups for the yard. Completing a delivery starts the rental; completing a pickup closes it."
+        subtitle="Deliveries and pickups. Completing a delivery starts the rental; completing a pickup closes it."
         action={{ href: "/admin/schedule/new", label: "Schedule transport" }}
       />
-      <div className="mb-4 flex flex-wrap gap-2 text-sm">
-        <a className={!transportType ? "btn btn-dark" : "btn btn-ghost"} href="/admin/transports">
+      <div className="mb-4 flex flex-wrap gap-2">
+        <a className={!transportType ? "filter-chip filter-chip-on" : "filter-chip"} href="/admin/transports">
           All
         </a>
-        <a className={transportType === "DELIVERY" ? "btn btn-dark" : "btn btn-ghost"} href="/admin/transports?type=DELIVERY">
+        <a className={transportType === "DELIVERY" ? "filter-chip filter-chip-on" : "filter-chip"} href="/admin/transports?type=DELIVERY">
           Deliveries
         </a>
-        <a className={transportType === "PICKUP" ? "btn btn-dark" : "btn btn-ghost"} href="/admin/transports?type=PICKUP">
+        <a className={transportType === "PICKUP" ? "filter-chip filter-chip-on" : "filter-chip"} href="/admin/transports?type=PICKUP">
           Pickups
         </a>
       </div>

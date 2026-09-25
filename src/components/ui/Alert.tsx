@@ -35,7 +35,7 @@ export function Alert({
   return (
     <div
       role={variant === "error" ? "alert" : "status"}
-      className={cn("flex gap-3 rounded-xl border px-4 py-3 text-sm", config.className, className)}
+      className={cn("flex gap-3 rounded border px-4 py-3 text-sm", config.className, className)}
     >
       <Icon className="mt-0.5 h-4 w-4 shrink-0" />
       <div className="min-w-0">{children}</div>

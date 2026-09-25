@@ -19,6 +19,7 @@ export type EquipmentCardItem = {
   billingUnit: string;
   currentCustomer: string | null;
   currentRentalStatus: string | null;
+  photoPath?: string | null;
 };
 
 export function EquipmentCatalog({ items }: { items: EquipmentCardItem[] }) {
@@ -45,7 +46,7 @@ export function EquipmentCatalog({ items }: { items: EquipmentCardItem[] }) {
           setSearch(value);
           setPage(1);
         }}
-        placeholder="Search number, name, type, or customer"
+        placeholder="Search equipment"
         resultLabel={`${filtered.length} machine${filtered.length === 1 ? "" : "s"}`}
       >
         <FilterSelect
@@ -77,6 +78,7 @@ export function EquipmentCatalog({ items }: { items: EquipmentCardItem[] }) {
           <table className="data-table">
             <thead>
               <tr>
+                <th>Photo</th>
                 <th>Equipment #</th>
                 <th>Equipment</th>
                 <th>Status</th>
@@ -90,6 +92,14 @@ export function EquipmentCatalog({ items }: { items: EquipmentCardItem[] }) {
             <tbody>
               {paged.items.map((item) => (
                 <tr key={item.id}>
+                  <td>
+                    {item.photoPath ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={item.photoPath} alt="" className="h-12 w-16 rounded object-cover bg-stone-100" />
+                    ) : (
+                      <span className="text-stone-400">—</span>
+                    )}
+                  </td>
                   <td className="font-semibold">#{item.number}</td>
                   <td>
                     <Link className="font-semibold text-stone-900" href={`/admin/equipment/${item.id}`}>

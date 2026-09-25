@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { requireStaff } from "@/lib/api/access";
-import { fail, json, options, requireApiUser } from "@/lib/api/http";
+import { fail, json, options, publicOrigin, requireApiUser } from "@/lib/api/http";
 import { equipmentSummary } from "@/lib/api/serialize";
 import { prisma } from "@/lib/prisma";
 
@@ -11,14 +11,21 @@ export function OPTIONS() {
 export async function GET(request: NextRequest) {
   try {
     const user = requireStaff(await requireApiUser(request, ["EMPLOYEE", "ADMIN"]));
+    const origin = publicOrigin(request);
     if (user.role === "ADMIN") {
-      const equipment = await prisma.equipment.findMany({ orderBy: { number: "asc" } });
-      return json({ equipment: equipment.map(equipmentSummary) });
+      const equipment = await prisma.equipment.findMany({
+        orderBy: { number: "asc" },
+        include: { photos: { orderBy: { takenAt: "desc" }, take: 1 } },
+      });
+      return json({ equipment: equipment.map((item) => equipmentSummary(item, origin)) });
     }
 
     const jobs = await prisma.scheduleEvent.findMany({
       where: { employeeId: user.id, equipmentId: { not: null } },
-      include: { equipment: true, customer: true },
+      include: {
+        equipment: { include: { photos: { orderBy: { takenAt: "desc" }, take: 1 } } },
+        customer: true,
+      },
       orderBy: { startAt: "desc" },
       take: 40,
     });
@@ -28,7 +35,7 @@ export async function GET(request: NextRequest) {
     }
     return json({
       equipment: [...byId.values()].map((job) => ({
-        ...equipmentSummary(job.equipment!),
+        ...equipmentSummary(job.equipment!, origin),
         customerName: job.customer?.name || null,
         latestJobId: job.id,
         latestJobType: job.type,

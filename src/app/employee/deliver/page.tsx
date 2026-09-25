@@ -46,12 +46,12 @@ export default async function DeliverPage({
     <div className="mx-auto max-w-2xl">
       <PageHeader
         title="Delivery inspection"
-        subtitle="Photograph the equipment before it leaves. Delivery cannot be completed without before photos, condition notes, and confirmation."
+        subtitle="Photograph the equipment before it leaves."
       />
       <ErrorBanner message={error} />
       <WorkflowSteps
         current={event ? 2 : 1}
-        steps={["Assigned delivery", "Inspect equipment", "Before photos & notes", "Complete delivery"]}
+        steps={["Job", "Inspect", "Photos", "Complete"]}
       />
       {event ? (
         <JobSummary

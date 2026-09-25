@@ -46,7 +46,7 @@ export function PickupForm({
     <>
       <WorkflowSteps
         current={selected ? 2 : 0}
-        steps={["Active rental", "Inspect after return", "After photos & notes", "Set equipment status"]}
+        steps={["Job", "Inspect", "Photos", "Complete"]}
       />
       {selected ? (
         <JobSummary
@@ -68,7 +68,7 @@ export function PickupForm({
         action={completePickup}
         message="Confirm the after-pickup photos show the returned condition? Completing pickup stops the rental timer, stores the final charge, and sets the equipment status you selected."
         confirmLabel="Complete pickup"
-        className="card space-y-5 p-6"
+        className="card space-y-5 p-4"
       >
         {eventId ? <input type="hidden" name="eventId" value={eventId} /> : null}
         <label className="block">
@@ -89,12 +89,9 @@ export function PickupForm({
           </select>
         </label>
         {selected ? (
-          <section className="rounded-2xl border border-orange-200 bg-orange-50/50 p-4">
-            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-orange-800">Initial condition</p>
-            <h2 className="mt-1 text-lg font-semibold text-stone-900">Before Delivery photos on this rental</h2>
-            <p className="mt-1 text-sm text-stone-600">
-              This documents the equipment before the customer received it. Compare these with the return photos you take next.
-            </p>
+          <section className="rounded border border-stone-200 bg-stone-50 p-4">
+            <p className="text-sm font-semibold text-stone-900">Before photos</p>
+            <p className="mt-1 text-sm text-stone-600">Compare these with the return photos you take next.</p>
             <div className="mt-3">
               <BeforeDeliveryPhotos photos={selected.beforePhotos} showHeading={false} />
             </div>
@@ -111,7 +108,7 @@ export function PickupForm({
           <legend className="field-label">
             Is there damage or an issue? <span className="text-orange-700">*</span>
           </legend>
-          <label className="flex items-start gap-3 rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm">
+          <label className="flex items-start gap-3 rounded border border-stone-200 bg-white px-4 py-3 text-sm">
             <input
               className="mt-1"
               type="radio"
@@ -123,7 +120,7 @@ export function PickupForm({
             />
             <span>No — equipment is in good condition and can return to Available if you choose that status.</span>
           </label>
-          <label className="flex items-start gap-3 rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm">
+          <label className="flex items-start gap-3 rounded border border-stone-200 bg-white px-4 py-3 text-sm">
             <input
               className="mt-1"
               type="radio"

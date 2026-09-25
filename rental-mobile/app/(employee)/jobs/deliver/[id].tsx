@@ -132,10 +132,7 @@ export default function DeliverScreen() {
       }
     >
       <Stepper steps={STEPS} current={step} />
-      <Title
-        title="Delivery inspection"
-        subtitle="Photograph the machine before it leaves. Complete stays locked until every item below is done."
-      />
+      <Title title="Delivery" subtitle="Photograph the machine before it leaves." />
       <ErrorText message={error} />
       <Card>
         <Badge status="DELIVERY" />

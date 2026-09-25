@@ -1,5 +1,5 @@
 import { Pressable, ScrollView, StyleSheet, Text } from "react-native";
-import { colors, radius } from "../theme";
+import { colors, radius, scale } from "../theme";
 
 export function FilterChips({
   options,
@@ -40,16 +40,17 @@ export function FilterChips({
 
 const styles = StyleSheet.create({
   wrap: { flexGrow: 0, marginBottom: 4 },
-  row: { gap: 8, paddingBottom: 8, paddingRight: 8 },
+  row: { gap: scale(8), paddingBottom: scale(10), paddingRight: 8 },
   chip: {
-    borderRadius: radius.pill,
+    borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: colors.line,
-    backgroundColor: colors.surface,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    borderColor: colors.border,
+    backgroundColor: colors.white,
+    paddingHorizontal: scale(14),
+    minHeight: scale(36),
+    justifyContent: "center",
   },
   chipOn: { backgroundColor: colors.ink, borderColor: colors.ink },
-  label: { color: colors.ink, fontWeight: "700", fontSize: 13 },
+  label: { color: colors.ink, fontWeight: "600", fontSize: scale(13) },
   labelOn: { color: colors.white },
 });

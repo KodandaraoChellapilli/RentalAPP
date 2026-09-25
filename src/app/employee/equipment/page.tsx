@@ -13,7 +13,7 @@ export default async function EmployeeEquipmentPage() {
       employeeId: user.id,
       equipmentId: { not: null },
     },
-    include: { equipment: true, customer: true, rental: true },
+    include: { equipment: { include: { photos: { orderBy: { takenAt: "desc" }, take: 1 } } }, customer: true, rental: true },
     orderBy: { startAt: "desc" },
     take: 40,
   });
@@ -44,6 +44,7 @@ export default async function EmployeeEquipmentPage() {
                 status={job.equipment.status}
                 rateLabel={formatRate(job.equipment.rate, job.equipment.billingUnit)}
                 customerName={job.customer?.name}
+                photoPath={job.equipment.photos[0]?.path}
                 actionLabel={job.type === "PICKUP" ? "Open pickup" : "Open delivery"}
               />
             ) : null,
