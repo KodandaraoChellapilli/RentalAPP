@@ -51,8 +51,6 @@ function tinyPng(): Blob {
 }
 
 async function acquireAvailableMachine() {
-  const existing = await prisma.equipment.findFirst({ where: { status: "AVAILABLE" } });
-  if (existing) return existing;
   return prisma.equipment.create({
     data: {
       number: `T${Date.now().toString().slice(-8)}`,
@@ -64,6 +62,23 @@ async function acquireAvailableMachine() {
       notes: "Created by api-integration tests",
     },
   });
+}
+
+async function removeApiTestMachines() {
+  const machines = await prisma.equipment.findMany({ where: { name: "API Test Machine" }, select: { id: true } });
+  const equipmentIds = machines.map((item) => item.id);
+  if (equipmentIds.length === 0) return;
+  const rentals = await prisma.rental.findMany({ where: { equipmentId: { in: equipmentIds } }, select: { id: true } });
+  const rentalIds = rentals.map((item) => item.id);
+  await prisma.photo.deleteMany({ where: { equipmentId: { in: equipmentIds } } });
+  await prisma.scheduleEvent.deleteMany({
+    where: { OR: [{ equipmentId: { in: equipmentIds } }, { rentalId: { in: rentalIds } }] },
+  });
+  await prisma.invoice.deleteMany({
+    where: { OR: [{ equipmentId: { in: equipmentIds } }, { rentalId: { in: rentalIds } }] },
+  });
+  await prisma.rental.deleteMany({ where: { id: { in: rentalIds } } });
+  await prisma.equipment.deleteMany({ where: { id: { in: equipmentIds } } });
 }
 
 test("health endpoint is up", async () => {
@@ -280,11 +295,8 @@ test("workflow: delivery → active → damaged pickup → maintenance + no doub
   assert.ok(again.res.status >= 400, "double pickup must fail");
 
   // Missing damage answer must fail
-  const available = await prisma.equipment.findFirst({
-    where: { status: "AVAILABLE", id: { not: machine.id } },
-  });
-  if (available) {
-    const rental2 = await prisma.rental.create({
+  const available = await acquireAvailableMachine();
+  const rental2 = await prisma.rental.create({
       data: {
         equipmentId: available.id,
         customerId: customer.id,
@@ -322,7 +334,6 @@ test("workflow: delivery → active → damaged pickup → maintenance + no doub
     await prisma.scheduleEvent.delete({ where: { id: pickup2.id } });
     await prisma.rental.delete({ where: { id: rental2.id } });
     await prisma.equipment.update({ where: { id: available.id }, data: { status: "AVAILABLE" } });
-  }
 });
 
 test("customer pickup request creates a pickup transport without completing the rental", async () => {
@@ -476,11 +487,22 @@ test("invoices use the rental charge and stay isolated", async () => {
   const abc = await login("abc@rental.app");
   const xyz = await login("xyz@rental.app");
   const employee = await login("employee@rental.app");
-  const rental = await prisma.rental.findFirst({
-    where: { customer: { email: "jobs@abcconstruction.example" }, invoice: null, status: { not: "CANCELLED" } },
-    include: { customer: true },
+  const machine = await acquireAvailableMachine();
+  const customer = await prisma.customer.findFirst({ where: { email: "jobs@abcconstruction.example" } });
+  assert.ok(customer);
+  const rental = await prisma.rental.create({
+    data: {
+      equipmentId: machine.id,
+      customerId: customer.id,
+      status: "COMPLETED",
+      destination: "Invoice audit lane",
+      startAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
+      endAt: new Date(),
+      rateSnapshot: machine.rate,
+      billingUnitSnapshot: machine.billingUnit,
+      finalAmount: 250,
+    },
   });
-  assert.ok(rental);
 
   const denied = await api(employee.token, "/api/invoices", {
     method: "POST",
@@ -496,6 +518,7 @@ test("invoices use the rental charge and stay isolated", async () => {
   const invoice = (created.body as { invoice: { id: string; number: string; total: number; status: string } }).invoice;
   assert.match(invoice.number, /^INV-\d{4}$/);
   assert.equal(invoice.status, "UNPAID");
+  assert.equal(invoice.total, 250);
 
   const duplicate = await api(admin.token, "/api/invoices", {
     method: "POST",
@@ -537,7 +560,7 @@ test("certificate of insurance is private to the customer", async () => {
   assert.equal(rejected.status, 400);
 
   const pdf = new FormData();
-  pdf.set("name", "ABC COI");
+  pdf.set("name", "API test COI");
   pdf.set("file", new File([Buffer.from("%PDF-1.4 test")], "coi.pdf", { type: "application/pdf" }));
   const uploaded = await fetch(`${BASE}/api/customers/${customer.id}/documents`, {
     method: "POST",
@@ -558,6 +581,7 @@ test("certificate of insurance is private to the customer", async () => {
     headers: { Authorization: `Bearer ${xyz.token}` },
   });
   assert.equal(foreignDownload.status, 403);
+  assert.equal((await api(admin.token, `/api/documents/${documentId}`, { method: "DELETE" })).res.status, 200);
 });
 
 test("manager can run yard invoices but not employee administration", async () => {
@@ -589,5 +613,7 @@ test("public catalog does not include customer data", async () => {
 });
 
 test.after(async () => {
+  await removeApiTestMachines();
+  await prisma.customerDocument.deleteMany({ where: { name: "API test COI" } });
   await prisma.$disconnect();
 });

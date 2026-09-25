@@ -15,6 +15,7 @@ export type JobRow = {
   equipmentLabel: string | null;
   customerName: string | null;
   employeeName: string | null;
+  employeeId?: string | null;
   rentalId: string | null;
   source?: string | null;
 };

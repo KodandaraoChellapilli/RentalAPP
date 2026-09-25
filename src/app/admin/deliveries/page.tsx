@@ -31,6 +31,7 @@ export default async function AdminDeliveriesPage() {
           equipmentLabel: event.equipment ? `#${event.equipment.number} ${event.equipment.name}` : null,
           customerName: event.customer?.name ?? null,
           employeeName: event.employee?.name ?? null,
+          employeeId: event.employeeId,
           rentalId: event.rentalId,
           source: event.source === "CUSTOMER" || event.notes?.includes("Customer requested pickup") ? "CUSTOMER" : event.source,
         }))}
