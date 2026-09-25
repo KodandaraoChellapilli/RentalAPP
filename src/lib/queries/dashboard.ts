@@ -1,11 +1,12 @@
 import { rentalCharge } from "@/lib/billing";
 import { prisma } from "@/lib/prisma";
+import { invoiceSummary } from "@/lib/services/invoices";
 import { durationMs, endOfToday, startOfToday } from "@/lib/utils";
 
 export async function getOwnerDashboard() {
   const todayStart = startOfToday();
   const todayEnd = endOfToday();
-  const [equipment, activeRentals, completedRentals, openEvents, todayEvents, employees] = await Promise.all([
+  const [equipment, activeRentals, completedRentals, openEvents, todayEvents, employees, invoices] = await Promise.all([
     prisma.equipment.findMany({
       orderBy: { number: "asc" },
       include: { photos: { orderBy: { takenAt: "desc" }, take: 1 } },
@@ -41,6 +42,7 @@ export async function getOwnerDashboard() {
       },
       orderBy: { name: "asc" },
     }),
+    invoiceSummary(),
   ]);
 
   const availableEquipment = equipment.filter((item) => item.status === "AVAILABLE");
@@ -100,5 +102,6 @@ export async function getOwnerDashboard() {
       };
     }),
     clockedInCount: clockedIn.length,
+    invoices,
   };
 }

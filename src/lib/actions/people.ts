@@ -7,7 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/session";
 
 export async function createCustomer(formData: FormData) {
-  await requireUser(["ADMIN"]);
+  const actor = await requireUser(["ADMIN", "MANAGER"]);
   const name = String(formData.get("name") || "").trim();
   const email = String(formData.get("email") || "").trim() || null;
   const phone = String(formData.get("phone") || "").trim() || null;
@@ -27,7 +27,7 @@ export async function createCustomer(formData: FormData) {
     redirect("/admin/customers/new?error=Portal+password+must+be+at+least+8+characters");
   }
 
-  if (portalEmail && portalPassword) {
+  if (actor.role === "ADMIN" && portalEmail && portalPassword) {
     await prisma.user.create({
       data: {
         email: portalEmail,
@@ -44,7 +44,7 @@ export async function createCustomer(formData: FormData) {
 }
 
 export async function updateCustomer(formData: FormData) {
-  await requireUser(["ADMIN"]);
+  await requireUser(["ADMIN", "MANAGER"]);
   const id = String(formData.get("id") || "");
   const name = String(formData.get("name") || "").trim();
   const email = String(formData.get("email") || "").trim() || null;

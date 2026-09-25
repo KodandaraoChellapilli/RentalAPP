@@ -3,8 +3,8 @@ import { fail, json, options, requireApiUser } from "@/lib/api/http";
 import { homeFor } from "@/lib/constants";
 import { roleLabelFor } from "@/lib/nav";
 
-function roleHome(role: "ADMIN" | "EMPLOYEE" | "CUSTOMER") {
-  if (role === "ADMIN") return "owner";
+function roleHome(role: "ADMIN" | "MANAGER" | "EMPLOYEE" | "CUSTOMER") {
+  if (role === "ADMIN" || role === "MANAGER") return "owner";
   if (role === "EMPLOYEE") return "employee";
   return "customer";
 }

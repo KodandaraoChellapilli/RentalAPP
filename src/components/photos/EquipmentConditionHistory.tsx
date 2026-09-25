@@ -2,8 +2,9 @@ import { AfterPickupPhotos } from "@/components/photos/AfterPickupPhotos";
 import { BeforeDeliveryPhotos } from "@/components/photos/BeforeDeliveryPhotos";
 import { LiveCharge } from "@/components/LiveCharge";
 import { StatusBadge } from "@/components/StatusBadge";
-import { formatDuration, formatRate } from "@/lib/billing";
+import { formatDuration, formatMoney, formatRate } from "@/lib/billing";
 import type { PhotoView } from "@/lib/photo-labels";
+import Link from "next/link";
 import { formatDate, formatDateTime } from "@/lib/utils";
 
 type HistoryEvent = {
@@ -26,6 +27,7 @@ type HistoryRental = {
   customer: { name: string };
   photos: PhotoView[];
   events?: HistoryEvent[];
+  invoice?: { id: string; number: string; status: string; total: number; dueDate: Date | string } | null;
 };
 
 function firstEmployee(photos: PhotoView[], event?: HistoryEvent) {
@@ -56,7 +58,8 @@ export function EquipmentConditionHistory({
       <div className="mb-3">
         <h2 className="font-semibold text-stone-900">Rental history</h2>
         <p className="mt-0.5 text-sm text-stone-500">
-          #{equipmentNumber} {equipmentName}
+          {equipmentNumber ? `#${equipmentNumber} ` : ""}
+          {equipmentName}
         </p>
       </div>
 
@@ -165,6 +168,24 @@ export function EquipmentConditionHistory({
                     </div>
                   </div>
                 </div>
+                {rental.invoice ? (
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-t border-stone-200/80 px-4 py-3 text-sm">
+                    <Link href={`/admin/invoices/${rental.invoice.id}`} className="font-medium">
+                      {rental.invoice.number}
+                    </Link>
+                    <span className="flex items-center gap-3">
+                      <span className="tabular-nums">{formatMoney(rental.invoice.total)}</span>
+                      <span className="text-stone-500">Due {formatDate(rental.invoice.dueDate)}</span>
+                      <StatusBadge kind="invoice" status={rental.invoice.status} />
+                    </span>
+                  </div>
+                ) : (
+                  <div className="border-t border-stone-200/80 px-4 py-3 text-sm">
+                    <Link href={`/admin/invoices/new?rentalId=${rental.id}`} className="font-medium text-orange-800">
+                      Create invoice
+                    </Link>
+                  </div>
+                )}
               </article>
             );
           })}

@@ -12,7 +12,8 @@ export function OPTIONS() {
 
 export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
-    const user = requireStaff(await requireApiUser(request, ["EMPLOYEE", "ADMIN"]));
+    const user = await requireApiUser(request, ["EMPLOYEE", "ADMIN", "MANAGER"]);
+    if (user.role === "EMPLOYEE") requireStaff(user);
     const { id } = await context.params;
     const origin = publicOrigin(request);
 

@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { requireOwner } from "@/lib/api/access";
+import { requireOperations } from "@/lib/api/access";
 import { fail, json, options, requireApiUser } from "@/lib/api/http";
 import { prisma } from "@/lib/prisma";
 
@@ -9,7 +9,7 @@ export function OPTIONS() {
 
 export async function GET(request: NextRequest) {
   try {
-    requireOwner(await requireApiUser(request, ["ADMIN"]));
+    requireOperations(await requireApiUser(request, ["ADMIN", "MANAGER"]));
     const customers = await prisma.customer.findMany({
       include: { _count: { select: { rentals: true, users: true } } },
       orderBy: { name: "asc" },

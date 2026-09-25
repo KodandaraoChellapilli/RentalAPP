@@ -18,10 +18,11 @@ model User {
   active       Boolean  @default(true)
   createdAt    DateTime @default(now())
 
-  customer       Customer?       @relation(fields: [customerId], references: [id])
+  customer       Customer?         @relation(fields: [customerId], references: [id])
   timeEntries    TimeEntry[]
   photos         Photo[]
   assignedEvents ScheduleEvent[]
+  documents      CustomerDocument[]
 }
 
 model Customer {
@@ -33,9 +34,11 @@ model Customer {
   notes     String?
   createdAt DateTime @default(now())
 
-  users   User[]
-  rentals Rental[]
-  events  ScheduleEvent[]
+  users     User[]
+  rentals   Rental[]
+  events    ScheduleEvent[]
+  invoices  Invoice[]
+  documents CustomerDocument[]
 }
 
 model Equipment {
@@ -49,9 +52,10 @@ model Equipment {
   notes       String?
   createdAt   DateTime @default(now())
 
-  rentals Rental[]
-  photos  Photo[]
-  events  ScheduleEvent[]
+  rentals  Rental[]
+  photos   Photo[]
+  events   ScheduleEvent[]
+  invoices Invoice[]
 }
 
 model Rental {
@@ -73,6 +77,7 @@ model Rental {
   customer  Customer        @relation(fields: [customerId], references: [id])
   photos    Photo[]
   events    ScheduleEvent[]
+  invoice   Invoice?
 }
 
 model TimeEntry {
@@ -124,4 +129,50 @@ model Photo {
   rental     Rental?        @relation(fields: [rentalId], references: [id])
   event      ScheduleEvent? @relation(fields: [eventId], references: [id])
   uploadedBy User?          @relation(fields: [uploadedById], references: [id])
+}
+
+model Invoice {
+  id          String    @id @default(cuid())
+  number      String    @unique
+  customerId  String
+  rentalId    String    @unique
+  equipmentId String
+  status      String    @default("UNPAID")
+  subtotal    Float
+  total       Float
+  dueDate     DateTime
+  notes       String?
+  paidAt      DateTime?
+  createdAt   DateTime  @default(now())
+
+  customer  Customer      @relation(fields: [customerId], references: [id])
+  rental    Rental        @relation(fields: [rentalId], references: [id])
+  equipment Equipment     @relation(fields: [equipmentId], references: [id])
+  lines     InvoiceLine[]
+}
+
+model InvoiceLine {
+  id          String @id @default(cuid())
+  invoiceId   String
+  description String
+  quantity    Float
+  unitAmount  Float
+  amount      Float
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+}
+
+model CustomerDocument {
+  id           String   @id @default(cuid())
+  customerId   String
+  type         String
+  name         String
+  storageKey   String
+  mimeType     String
+  sizeBytes    Int
+  uploadedById String?
+  createdAt    DateTime @default(now())
+
+  customer   Customer @relation(fields: [customerId], references: [id])
+  uploadedBy User?    @relation(fields: [uploadedById], references: [id])
 }

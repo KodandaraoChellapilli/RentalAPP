@@ -10,9 +10,10 @@ export function OPTIONS() {
 
 export async function GET(request: NextRequest) {
   try {
-    const user = requireStaff(await requireApiUser(request, ["EMPLOYEE", "ADMIN"]));
+    const user = await requireApiUser(request, ["EMPLOYEE", "ADMIN", "MANAGER"]);
+    if (user.role === "EMPLOYEE") requireStaff(user);
     const origin = publicOrigin(request);
-    if (user.role === "ADMIN") {
+    if (user.role === "ADMIN" || user.role === "MANAGER") {
       const equipment = await prisma.equipment.findMany({
         orderBy: { number: "asc" },
         include: { photos: { orderBy: { takenAt: "desc" }, take: 1 } },

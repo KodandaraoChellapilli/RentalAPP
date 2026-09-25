@@ -5,7 +5,14 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Field } from "@/components/ui/Field";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 import { createCustomerPortalUser, updateCustomer } from "@/lib/actions/people";
+import { uploadCustomerDocument, removeCustomerDocument } from "@/lib/actions/documents";
+import { EquipmentConditionHistory } from "@/components/photos/EquipmentConditionHistory";
+import { StatusBadge } from "@/components/StatusBadge";
+import { formatMoney } from "@/lib/billing";
+import { DOCUMENT_TYPE_LABELS, type DocumentType } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/session";
+import { formatDate } from "@/lib/utils";
 
 export default async function CustomerDetailPage({
   params,
@@ -16,11 +23,22 @@ export default async function CustomerDetailPage({
 }) {
   const { id } = await params;
   const { error } = await searchParams;
+  const session = await getSession();
   const customer = await prisma.customer.findUnique({
     where: { id },
     include: {
       users: true,
-      rentals: { include: { equipment: true }, orderBy: { createdAt: "desc" } },
+      documents: { orderBy: { createdAt: "desc" } },
+      invoices: { include: { equipment: true }, orderBy: { createdAt: "desc" } },
+      rentals: {
+        include: {
+          equipment: true,
+          invoice: true,
+          photos: { include: { uploadedBy: true }, orderBy: { takenAt: "asc" } },
+          events: { include: { employee: true }, orderBy: { startAt: "asc" } },
+        },
+        orderBy: { createdAt: "desc" },
+      },
     },
   });
   if (!customer) notFound();
@@ -63,6 +81,7 @@ export default async function CustomerDetailPage({
               </p>
             ))
           )}
+          {session?.role === "ADMIN" ? (
           <form action={createCustomerPortalUser} className="mt-4 space-y-3">
             <input type="hidden" name="customerId" value={customer.id} />
             <Field label="Contact name">
@@ -77,7 +96,10 @@ export default async function CustomerDetailPage({
             <SubmitButton variant="dark" pendingLabel="Adding…">
               Add portal login
             </SubmitButton>
-          </form>
+            </form>
+          ) : (
+            <p className="mt-3 text-sm text-stone-500">Only the owner can create customer logins.</p>
+          )}
         </div>
       </div>
       <div>
@@ -123,6 +145,69 @@ export default async function CustomerDetailPage({
           </div>
         )}
       </div>
+      <section className="lg:col-span-2">
+        <h2 className="mb-3 font-semibold">Invoices</h2>
+        {customer.invoices.length === 0 ? (
+          <EmptyState title="No invoices" body="Create an invoice from one of this customer's rentals." />
+        ) : (
+          <div className="card divide-y divide-stone-100">
+            {customer.invoices.map((invoice) => (
+              <a key={invoice.id} href={`/admin/invoices/${invoice.id}`} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm">
+                <span>
+                  <span className="font-medium">{invoice.number}</span>
+                  <span className="text-stone-500"> · #{invoice.equipment.number} {invoice.equipment.name}</span>
+                </span>
+                <span className="flex items-center gap-3">
+                  <span className="tabular-nums">{formatMoney(invoice.total)}</span>
+                  <span className="text-stone-500">{formatDate(invoice.dueDate)}</span>
+                  <StatusBadge kind="invoice" status={invoice.status} />
+                </span>
+              </a>
+            ))}
+          </div>
+        )}
+      </section>
+      <section className="lg:col-span-2">
+        <h2 className="mb-3 font-semibold">Documents</h2>
+        <form action={uploadCustomerDocument} className="card mb-3 flex flex-wrap items-end gap-3 p-4">
+          <input type="hidden" name="customerId" value={customer.id} />
+          <Field label="Certificate of Insurance (PDF)">
+            <input className="field" type="file" name="file" accept="application/pdf,.pdf" required />
+          </Field>
+          <Field label="Name">
+            <input className="field" name="name" placeholder="Certificate of Insurance" />
+          </Field>
+          <SubmitButton pendingLabel="Uploading…">Upload PDF</SubmitButton>
+        </form>
+        {customer.documents.length === 0 ? (
+          <EmptyState title="No documents" body="Upload this customer's certificate of insurance." />
+        ) : (
+          <div className="card divide-y divide-stone-100">
+            {customer.documents.map((document) => (
+              <div key={document.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm">
+                <div>
+                  <a className="font-medium" href={`/api/documents/${document.id}`}>{document.name}</a>
+                  <p className="text-stone-500">
+                    {DOCUMENT_TYPE_LABELS[document.type as DocumentType] || document.type} · {formatDate(document.createdAt)}
+                  </p>
+                </div>
+                <form action={removeCustomerDocument}>
+                  <input type="hidden" name="id" value={document.id} />
+                  <input type="hidden" name="customerId" value={customer.id} />
+                  <SubmitButton variant="dark" pendingLabel="Removing…">Delete</SubmitButton>
+                </form>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+      <section className="lg:col-span-2">
+        <EquipmentConditionHistory
+          equipmentNumber=""
+          equipmentName={customer.name}
+          rentals={customer.rentals.map((rental) => ({ ...rental, customer: { name: customer.name } }))}
+        />
+      </section>
     </div>
   );
 }

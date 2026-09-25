@@ -247,7 +247,7 @@ export async function assertStaffCanWorkRental(
   eventId: string | null,
   type: "DELIVERY" | "PICKUP",
 ) {
-  if (user.role === "ADMIN") return;
+  if (user.role === "ADMIN" || user.role === "MANAGER") return;
 
   if (eventId) {
     const event = await prisma.scheduleEvent.findUnique({ where: { id: eventId } });

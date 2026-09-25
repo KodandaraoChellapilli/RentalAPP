@@ -41,10 +41,13 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (user && pathname.startsWith("/admin") && user.role !== "ADMIN") {
+  if (user?.role === "MANAGER" && (pathname.startsWith("/admin/employees") || pathname.startsWith("/admin/reports"))) {
+    return NextResponse.redirect(new URL("/admin/dashboard", request.url));
+  }
+  if (user && pathname.startsWith("/admin") && user.role !== "ADMIN" && user.role !== "MANAGER") {
     return NextResponse.redirect(new URL(homeFor(user.role), request.url));
   }
-  if (user && pathname.startsWith("/employee") && user.role !== "EMPLOYEE" && user.role !== "ADMIN") {
+  if (user && pathname.startsWith("/employee") && user.role !== "EMPLOYEE" && user.role !== "ADMIN" && user.role !== "MANAGER") {
     return NextResponse.redirect(new URL(homeFor(user.role), request.url));
   }
   if (user && pathname.startsWith("/customer") && user.role !== "CUSTOMER" && user.role !== "ADMIN") {

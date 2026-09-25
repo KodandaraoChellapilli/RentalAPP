@@ -52,7 +52,7 @@ export function welcomeTitle(fullName?: string | null, fallback = "Welcome") {
 }
 
 export function homeFor(role: string) {
-  if (role === "ADMIN") return "/(owner)/dashboard";
+  if (role === "ADMIN" || role === "MANAGER") return "/(owner)/dashboard";
   if (role === "EMPLOYEE") return "/(employee)/clock";
   return "/(customer)/rentals";
 }

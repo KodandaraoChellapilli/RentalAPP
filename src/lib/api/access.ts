@@ -6,6 +6,18 @@ export function requireOwner(user: SessionUser) {
   return user;
 }
 
+/** Day-to-day yard operations. Not employee accounts, reports, or system administration. */
+export function requireOperations(user: SessionUser) {
+  if (user.role !== "ADMIN" && user.role !== "MANAGER") {
+    throw new ServiceError("You do not have access.", 403);
+  }
+  return user;
+}
+
+export function isOperationsRole(role: string) {
+  return role === "ADMIN" || role === "MANAGER";
+}
+
 export function requireStaff(user: SessionUser) {
   if (user.role !== "ADMIN" && user.role !== "EMPLOYEE") {
     throw new ServiceError("You do not have access.", 403);
@@ -24,7 +36,7 @@ export function requireCustomer(user: SessionUser) {
 }
 
 export function canAccessEvent(user: SessionUser, employeeId?: string | null) {
-  if (user.role === "ADMIN") return true;
+  if (user.role === "ADMIN" || user.role === "MANAGER") return true;
   return user.role === "EMPLOYEE" && employeeId === user.id;
 }
 

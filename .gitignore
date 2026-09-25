@@ -8,6 +8,8 @@ prisma/dev.db
 prisma/dev.db-journal
 public/uploads/*
 !public/uploads/.gitkeep
+storage/private/*
+!storage/private/.gitkeep
 next-env.d.ts
 .DS_Store
 *.tsbuildinfo

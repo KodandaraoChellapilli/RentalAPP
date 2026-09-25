@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { requireOwner } from "@/lib/api/access";
+import { requireOperations } from "@/lib/api/access";
 import { fail, json, options, requireApiUser } from "@/lib/api/http";
 import { eventJson } from "@/lib/api/serialize";
 import { prisma } from "@/lib/prisma";
@@ -10,7 +10,7 @@ export function OPTIONS() {
 
 export async function GET(request: NextRequest) {
   try {
-    requireOwner(await requireApiUser(request, ["ADMIN"]));
+    requireOperations(await requireApiUser(request, ["ADMIN", "MANAGER"]));
     const events = await prisma.scheduleEvent.findMany({
       include: { equipment: true, customer: true, employee: true, rental: true },
       orderBy: { startAt: "asc" },

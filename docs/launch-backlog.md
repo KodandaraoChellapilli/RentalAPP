@@ -1,6 +1,6 @@
 # West Ridge Rentals — launch checklist and backlog
 
-Current platform commit is the source of truth. Do not deploy, buy a domain, or change paid infrastructure until Sam approves a host and credentials.
+Invoices, certificate-of-insurance uploads, and a manager role are now in the app. Production hosting is still not set up. Do not deploy, buy a domain, or change paid infrastructure until Sam approves a host and credentials.
 
 The rental platform stays the operational system. A future public marketing site is a separate product and must read equipment, rates, and availability from this backend. It must not get its own equipment database.
 

@@ -6,7 +6,7 @@ import { tabBarOptions, tabIcon } from "../../src/components/nav";
 
 export default function OwnerLayout() {
   const { user, loading } = useAuth();
-  if (!loading && (!user || user.role !== "ADMIN")) return <Redirect href="/" />;
+  if (!loading && (!user || (user.role !== "ADMIN" && user.role !== "MANAGER"))) return <Redirect href="/" />;
 
   return (
     <Tabs

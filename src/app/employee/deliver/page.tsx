@@ -38,7 +38,7 @@ export default async function DeliverPage({
 
   const assignedIds = new Set(assigned.map((item) => item.equipmentId).filter(Boolean));
   const visibleEquipment =
-    user.role === "ADMIN"
+    user.role === "ADMIN" || user.role === "MANAGER"
       ? equipment
       : equipment.filter((item) => assignedIds.has(item.id) || item.id === event?.equipmentId);
 

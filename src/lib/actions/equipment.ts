@@ -7,7 +7,7 @@ import { requireUser } from "@/lib/session";
 import { BILLING_UNITS, EQUIPMENT_STATUSES } from "@/lib/constants";
 
 export async function createEquipment(formData: FormData) {
-  await requireUser(["ADMIN"]);
+  await requireUser(["ADMIN", "MANAGER"]);
   const number = String(formData.get("number") || "").trim();
   const name = String(formData.get("name") || "").trim();
   const type = String(formData.get("type") || "").trim();
@@ -37,7 +37,7 @@ export async function createEquipment(formData: FormData) {
 }
 
 export async function updateEquipment(formData: FormData) {
-  await requireUser(["ADMIN"]);
+  await requireUser(["ADMIN", "MANAGER"]);
   const id = String(formData.get("id") || "");
   const number = String(formData.get("number") || "").trim();
   const name = String(formData.get("name") || "").trim();

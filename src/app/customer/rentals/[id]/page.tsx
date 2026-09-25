@@ -6,11 +6,11 @@ import { ErrorBanner, PageHeader } from "@/components/PageHeader";
 import { BeforeAfterPhotos } from "@/components/photos/BeforeAfterPhotos";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Panel } from "@/components/ui/Panel";
-import { formatRate } from "@/lib/billing";
+import { formatMoney, formatRate } from "@/lib/billing";
 import { photoInclude } from "@/lib/photos";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/session";
-import { formatDateTime } from "@/lib/utils";
+import { formatDate, formatDateTime } from "@/lib/utils";
 
 export default async function CustomerRentalDetailPage({
   params,
@@ -29,6 +29,7 @@ export default async function CustomerRentalDetailPage({
       customer: true,
       photos: { include: photoInclude, orderBy: { takenAt: "asc" } },
       events: { orderBy: { startAt: "asc" } },
+      invoice: true,
     },
   });
 
@@ -86,6 +87,20 @@ export default async function CustomerRentalDetailPage({
           ) : null}
         </div>
       </Panel>
+      {rental.invoice ? (
+        <Panel title="Invoice" className="mt-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+            <div>
+              <p className="font-medium">{rental.invoice.number}</p>
+              <p className="text-stone-500">Due {formatDate(rental.invoice.dueDate)}</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="tabular-nums">{formatMoney(rental.invoice.total)}</span>
+              <StatusBadge kind="invoice" status={rental.invoice.status} />
+            </div>
+          </div>
+        </Panel>
+      ) : null}
       {canConfirmDelivery ? <CustomerConfirmDeliveryForm rentalId={rental.id} /> : null}
       {rental.status === "ACTIVE" ? (
         <CustomerEndRentalForm rentalId={rental.id} defaultLocation={rental.destination} />

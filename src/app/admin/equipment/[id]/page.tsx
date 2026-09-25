@@ -19,6 +19,7 @@ export default async function EquipmentDetailPage({ params }: { params: Promise<
           customer: true,
           photos: { include: photoInclude, orderBy: { takenAt: "asc" } },
           events: { include: { employee: true }, orderBy: { startAt: "asc" } },
+          invoice: true,
         },
         orderBy: { createdAt: "desc" },
       },

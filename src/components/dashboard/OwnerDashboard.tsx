@@ -31,6 +31,16 @@ export function OwnerDashboard({ data }: { data: Dashboard }) {
       ) : null}
 
       <div className="ops-strip">
+        <StatCard title="Invoices" value={data.invoices.total} subtitle={`${data.invoices.paid} paid`} href="/admin/invoices" />
+        <StatCard
+          title="Unpaid"
+          value={data.invoices.unpaid}
+          subtitle={`${formatMoney(data.invoices.outstanding)} outstanding`}
+          href="/admin/invoices"
+        />
+      </div>
+
+      <div className="ops-strip">
         <StatCard
           title="Active rentals"
           value={counts.activeRentals}

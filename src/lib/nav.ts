@@ -23,6 +23,7 @@ export const ADMIN_NAV: NavGroup[] = [
     links: [
       { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
       { href: "/admin/rentals", label: "Rentals", icon: Package },
+      { href: "/admin/invoices", label: "Invoices", icon: Wallet },
       { href: "/admin/equipment", label: "Equipment", icon: Wrench },
       { href: "/admin/calendar", label: "Calendar", icon: CalendarDays },
       { href: "/admin/transports", label: "Transports", icon: Truck },
@@ -70,6 +71,7 @@ const PAGE_TITLES: Array<{ match: string; title: string }> = [
   { match: "/admin/equipment/new", title: "Add Equipment" },
   { match: "/admin/equipment", title: "Equipment" },
   { match: "/admin/rentals", title: "Rentals" },
+  { match: "/admin/invoices", title: "Invoices" },
   { match: "/admin/calendar", title: "Calendar" },
   { match: "/admin/schedule/new", title: "New Schedule" },
   { match: "/admin/transports", title: "Transports" },
@@ -92,6 +94,12 @@ const PAGE_TITLES: Array<{ match: string; title: string }> = [
 
 export function navGroupsFor(role: Role) {
   if (role === "ADMIN") return ADMIN_NAV;
+  if (role === "MANAGER") {
+    return ADMIN_NAV.map((group) => ({
+      ...group,
+      links: group.links.filter((link) => link.href !== "/admin/employees" && link.href !== "/admin/reports"),
+    })).filter((group) => group.links.length > 0);
+  }
   if (role === "EMPLOYEE") return EMPLOYEE_NAV;
   return CUSTOMER_NAV;
 }
@@ -109,6 +117,7 @@ export function pageTitleFor(pathname: string) {
 
 export function roleLabelFor(role: Role) {
   if (role === "ADMIN") return "Owner";
+  if (role === "MANAGER") return "Manager";
   if (role === "EMPLOYEE") return "Employee";
   return "Customer";
 }

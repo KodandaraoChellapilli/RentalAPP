@@ -14,7 +14,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
 export async function createSchedule(formData: FormData) {
-  await requireUser(["ADMIN"]);
+  await requireUser(["ADMIN", "MANAGER"]);
   const type = String(formData.get("type") || "DELIVERY");
   const equipmentId = String(formData.get("equipmentId") || "");
   const customerId = String(formData.get("customerId") || "");
@@ -50,7 +50,7 @@ export async function createSchedule(formData: FormData) {
 }
 
 export async function completeDelivery(formData: FormData) {
-  const user = await requireUser(["EMPLOYEE", "ADMIN"]);
+  const user = await requireUser(["EMPLOYEE", "ADMIN", "MANAGER"]);
   try {
     const result = await completeDeliveryService({
       user,
@@ -63,7 +63,7 @@ export async function completeDelivery(formData: FormData) {
       conditionConfirmed: String(formData.get("conditionConfirmed") || "") === "on",
       photos: filesFromForm(formData),
     });
-    redirect(user.role === "ADMIN" ? `/admin/equipment/${result.equipmentId}` : "/employee/jobs?done=delivery");
+    redirect(user.role === "EMPLOYEE" ? "/employee/jobs?done=delivery" : `/admin/equipment/${result.equipmentId}`);
   } catch (error) {
     if (error instanceof ServiceError) {
       redirect(`/employee/deliver?error=${encodeURIComponent(error.message)}`);
@@ -73,7 +73,7 @@ export async function completeDelivery(formData: FormData) {
 }
 
 export async function completePickup(formData: FormData) {
-  const user = await requireUser(["EMPLOYEE", "ADMIN"]);
+  const user = await requireUser(["EMPLOYEE", "ADMIN", "MANAGER"]);
   try {
     const rawIssue = String(formData.get("hasIssue") || "");
     if (rawIssue !== "yes" && rawIssue !== "no") {
@@ -89,7 +89,7 @@ export async function completePickup(formData: FormData) {
       afterStatus: String(formData.get("afterStatus") || ""),
       photos: filesFromForm(formData),
     });
-    redirect(user.role === "ADMIN" ? `/admin/equipment/${result.equipmentId}` : "/employee/jobs?done=pickup");
+    redirect(user.role === "EMPLOYEE" ? "/employee/jobs?done=pickup" : `/admin/equipment/${result.equipmentId}`);
   } catch (error) {
     if (error instanceof ServiceError) {
       redirect(`/employee/pickup?error=${encodeURIComponent(error.message)}`);
@@ -99,7 +99,7 @@ export async function completePickup(formData: FormData) {
 }
 
 export async function assignScheduleEmployee(formData: FormData) {
-  await requireUser(["ADMIN"]);
+  await requireUser(["ADMIN", "MANAGER"]);
   const eventId = String(formData.get("eventId") || "");
   const employeeId = String(formData.get("employeeId") || "") || null;
   if (!eventId) redirect("/admin/calendar?error=Select+a+scheduled+job");

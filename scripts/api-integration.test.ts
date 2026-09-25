@@ -469,6 +469,123 @@ test("customer pickup request creates a pickup transport without completing the 
   assert.equal((await api(abc.token, "/api/dashboard")).res.status, 403);
 });
 
+test("invoices use the rental charge and stay isolated", async () => {
+  const admin = await login("admin@rental.app");
+  const abc = await login("abc@rental.app");
+  const xyz = await login("xyz@rental.app");
+  const employee = await login("employee@rental.app");
+  const rental = await prisma.rental.findFirst({
+    where: { customer: { email: "jobs@abcconstruction.example" }, invoice: null, status: { not: "CANCELLED" } },
+    include: { customer: true },
+  });
+  assert.ok(rental);
+
+  const denied = await api(employee.token, "/api/invoices", {
+    method: "POST",
+    body: JSON.stringify({ rentalId: rental.id }),
+  });
+  assert.equal(denied.res.status, 403);
+
+  const created = await api(admin.token, "/api/invoices", {
+    method: "POST",
+    body: JSON.stringify({ rentalId: rental.id, dueDate: "2026-10-15" }),
+  });
+  assert.equal(created.res.status, 201, JSON.stringify(created.body));
+  const invoice = (created.body as { invoice: { id: string; number: string; total: number; status: string } }).invoice;
+  assert.match(invoice.number, /^INV-\d{4}$/);
+  assert.equal(invoice.status, "UNPAID");
+
+  const duplicate = await api(admin.token, "/api/invoices", {
+    method: "POST",
+    body: JSON.stringify({ rentalId: rental.id }),
+  });
+  assert.equal(duplicate.res.status, 409);
+
+  const mine = await api(abc.token, "/api/my/invoices");
+  assert.equal(mine.res.status, 200);
+  const mineIds = (mine.body as { invoices: Array<{ id: string }> }).invoices.map((item) => item.id);
+  assert.ok(mineIds.includes(invoice.id));
+
+  const other = await api(xyz.token, "/api/my/invoices");
+  const otherIds = (other.body as { invoices: Array<{ id: string }> }).invoices.map((item) => item.id);
+  assert.equal(otherIds.includes(invoice.id), false);
+
+  const paid = await api(admin.token, `/api/invoices/${invoice.id}`, {
+    method: "PATCH",
+    body: JSON.stringify({ status: "PAID" }),
+  });
+  assert.equal(paid.res.status, 200);
+  assert.equal((paid.body as { invoice: { status: string } }).invoice.status, "PAID");
+});
+
+test("certificate of insurance is private to the customer", async () => {
+  const admin = await login("admin@rental.app");
+  const abc = await login("abc@rental.app");
+  const xyz = await login("xyz@rental.app");
+  const customer = await prisma.customer.findFirst({ where: { email: "jobs@abcconstruction.example" } });
+  assert.ok(customer);
+
+  const bad = new FormData();
+  bad.set("file", new File([Buffer.from("not a pdf")], "photo.png", { type: "image/png" }));
+  const rejected = await fetch(`${BASE}/api/customers/${customer.id}/documents`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${admin.token}` },
+    body: bad,
+  });
+  assert.equal(rejected.status, 400);
+
+  const pdf = new FormData();
+  pdf.set("name", "ABC COI");
+  pdf.set("file", new File([Buffer.from("%PDF-1.4 test")], "coi.pdf", { type: "application/pdf" }));
+  const uploaded = await fetch(`${BASE}/api/customers/${customer.id}/documents`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${admin.token}` },
+    body: pdf,
+  });
+  const uploadedBody = await uploaded.text();
+  assert.equal(uploaded.status, 201, uploadedBody);
+  const documentId = (JSON.parse(uploadedBody) as { document: { id: string } }).document.id;
+
+  const ownerDownload = await fetch(`${BASE}/api/documents/${documentId}`, {
+    headers: { Authorization: `Bearer ${abc.token}` },
+  });
+  assert.equal(ownerDownload.status, 200);
+  assert.match(ownerDownload.headers.get("content-type") || "", /pdf/);
+
+  const foreignDownload = await fetch(`${BASE}/api/documents/${documentId}`, {
+    headers: { Authorization: `Bearer ${xyz.token}` },
+  });
+  assert.equal(foreignDownload.status, 403);
+});
+
+test("manager can run yard invoices but not employee administration", async () => {
+  const passwordHash = await prisma.user.findUnique({ where: { email: "admin@rental.app" } });
+  assert.ok(passwordHash);
+  const email = `manager-${Date.now()}@rental.app`;
+  await prisma.user.create({
+    data: { email, name: "Aaron", role: "MANAGER", passwordHash: passwordHash.passwordHash },
+  });
+  try {
+    const manager = await login(email);
+    assert.equal((await api(manager.token, "/api/invoices")).res.status, 200);
+    assert.equal((await api(manager.token, "/api/customers")).res.status, 200);
+    assert.equal((await api(manager.token, "/api/employees")).res.status, 403);
+    assert.equal((await api(manager.token, "/api/reports")).res.status, 403);
+  } finally {
+    await prisma.user.deleteMany({ where: { email } });
+  }
+});
+
+test("public catalog does not include customer data", async () => {
+  const res = await fetch(`${BASE}/api/public/equipment`);
+  assert.equal(res.status, 200);
+  const body = (await res.json()) as { equipment: Array<Record<string, unknown>> };
+  assert.ok(body.equipment.length > 0);
+  assert.equal("customer" in body.equipment[0], false);
+  assert.equal("invoice" in body.equipment[0], false);
+  assert.equal(typeof body.equipment[0].available, "boolean");
+});
+
 test.after(async () => {
   await prisma.$disconnect();
 });
